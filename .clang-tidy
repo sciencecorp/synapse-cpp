@@ -1,0 +1,20 @@
+Checks: "
+    cppcoreguidelines-*,
+        -cppcoreguidelines-avoid-do-while,
+        -cppcoreguidelines-avoid-c-arrays,
+        -cppcoreguidelines-special-member-functions,
+        -cppcoreguidelines-non-private-member-variables-in-classes,
+        -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+    google-*,
+    modernize-*,
+        -modernize-use-trailing-return-type,
+        -modernize-avoid-c-arrays,
+        -modernize-pass-by-value,
+    readability-*,
+        -readability-identifier-length,
+        -readability-function-cognitive-complexity,
+        -readability-convert-member-functions-to-static,
+        -readability-container-contains
+"
+HeaderFilterRegex: "src/.*"
+FormatStyle: google

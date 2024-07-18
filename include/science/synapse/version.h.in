@@ -1,0 +1,8 @@
+#pragma once
+#include <string>
+
+namespace synapse {
+
+const std::string SYNAPSE_VERSION = "@CMAKE_PROJECT_VERSION@";
+
+}

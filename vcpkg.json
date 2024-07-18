@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "synapse",
+  "version": "0.1.0",
+  "supports": "arm64 | x64 | linux | osx",
+  "default-features": [],
+  "dependencies": ["grpc", "protobuf", "science-scipp"],
+  "vcpkg-configuration": {
+    "overlay-ports": ["./external/sciencecorp/vcpkg/ports"]
+  },
+  "features": {
+    "cli": {
+      "description": "synapse client CLI",
+      "dependencies": ["docopt"]
+    },
+    "tests": {
+      "description": "synapse client test suite",
+      "dependencies": ["gtest"]
+    }
+  }
+}

@@ -1,0 +1,9 @@
+# Build
+CMakeUserPresets.json
+build/
+
+# General
+tmp/
+
+# Proto
+include/science/synapse/api

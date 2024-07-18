@@ -1,0 +1,6 @@
+@PACKAGE_INIT@
+
+find_package(gRPC REQUIRED CONFIG)
+find_package(Protobuf REQUIRED CONFIG)
+
+include("${CMAKE_CURRENT_LIST_DIR}/synapseTargets.cmake")
