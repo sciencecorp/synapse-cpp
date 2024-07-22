@@ -4,3 +4,6 @@
 [submodule "external/sciencecorp/vcpkg"]
 	path = external/sciencecorp/vcpkg
 	url = git@github.com:sciencecorp/vcpkg.git
+[submodule "external/microsoft/vcpkg"]
+	path = external/microsoft/vcpkg
+	url = git@github.com:microsoft/vcpkg.git
