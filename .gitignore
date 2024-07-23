@@ -1,6 +1,7 @@
 # Build
 CMakeUserPresets.json
 build/
+dist/
 
 # General
 tmp/

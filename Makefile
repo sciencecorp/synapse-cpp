@@ -13,7 +13,6 @@ clean:
 configure:
 	cmake --preset=static -DCMAKE_BUILD_TYPE=Debug -DVCPKG_MANIFEST_FEATURES=${VCPKG_MANIFEST_FEATURES}
 
-.PHONY: cli
-cli:
-	./build/bin/synapse-cli
-
+.PHONY: install
+install:
+	cmake --install build
