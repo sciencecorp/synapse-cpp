@@ -8,7 +8,7 @@ ElectricalBroadband::ElectricalBroadband(
   uint32_t bit_width,
   uint32_t gain,
   std::optional<ChannelMask> channel_mask
-) : Node(NodeType::kStreamOut),
+) : Node(NodeType::kElectricalBroadband),
     peripheral_id_(peripheral_id),
     sample_rate_(sample_rate),
     bit_width_(bit_width),

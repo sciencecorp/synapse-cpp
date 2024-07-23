@@ -1,27 +1,26 @@
 #pragma once
 
+#include <netinet/in.h>
 #include <string>
 #include <vector>
 
+#include "science/scipp/status.h"
 #include "science/synapse/api/nodes/stream_in.pb.h"
-#include "science/synapse/node.h"
+#include "science/synapse/nodes/udp_node.h"
 
 namespace synapse {
 
-class StreamIn : public Node {
+class StreamIn : public UdpNode {
  public:
-  explicit StreamIn(std::optional<std::string> multicast_group);
+  StreamIn();
 
-  auto write(std::vector<std::byte>) const -> bool;
+  auto write(const std::vector<std::byte>& in) -> science::Status;
 
  protected:
-  auto get_addr() const -> std::optional<std::string>;
   auto p_to_proto(synapse::NodeConfig* proto) -> void override;
 
  private:
-  std::optional<std::string> multicast_group_;
-
-  int socket_;
+  auto init() -> science::Status;
 };
 
 }  // namespace synapse

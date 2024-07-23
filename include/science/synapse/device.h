@@ -9,8 +9,8 @@
 #include "science/synapse/api/node.pb.h"
 #include "science/synapse/api/synapse.pb.h"
 #include "science/synapse/api/synapse.grpc.pb.h"
-#include "science/synapse/device_advertisement.h"
 #include "science/synapse/config.h"
+#include "science/synapse/device_advertisement.h"
 
 namespace synapse {
 
@@ -27,19 +27,33 @@ class Device {
   /**
    * @see synapse::SynapseDevice::Stub#Configure
    */
-  auto configure(Config* config) -> bool;
+  auto configure(Config* config) -> science::Status;
   /**
    * @see synapse::SynapseDevice::Stub#info
    */
-  auto info() -> std::optional<synapse::DeviceInfo>;
+  auto info(synapse::DeviceInfo* info) -> science::Status;
   /**
    * @see synapse::SynapseDevice::Stub#start
    */
-  auto start() -> bool;
+  auto start() -> science::Status;
   /**
    * @see synapse::SynapseDevice::Stub#start
    */
-  auto stop() -> bool;
+  auto stop() -> science::Status;
+
+  /**
+   * List the node sockets configured on the device. 
+   * 
+   * @return std::vector<synapse::NodeSocket> 
+   */
+  auto sockets() const -> const std::vector<synapse::NodeSocket>&;
+
+  /**
+   * List the node sockets configured on the device. 
+   * 
+   * @return std::vector<synapse::NodeSocket> 
+   */
+  auto uri() const -> const std::string&;
 
  private:
   std::string uri_;
@@ -48,7 +62,7 @@ class Device {
 
   std::vector<synapse::NodeSocket> sockets_;
 
-  auto handle_status_response(const synapse::Status& status) -> bool;
+  auto handle_status_response(const synapse::Status& status) -> science::Status;
 };
 
 }  // namespace synapse

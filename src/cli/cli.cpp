@@ -9,6 +9,8 @@ R"(Synapse C++ Client CLI
     synapse configure <uri> [--config=<filepath>]
     synapse start <uri>
     synapse stop <uri>
+    synapse stream read <uri> [--multicast=<group>]
+    synapse stream write <uri>
     synapse (-h | --help)
     synapse --version 
 
@@ -17,6 +19,7 @@ R"(Synapse C++ Client CLI
     --version               Show version.
     -c --config=<filepath>  Path to configuration file.
     --auth_code=<code>      Authorization code for device discovery [default: ].
+    --multicast=<group>     Multicast group for streaming [default: ].
     --timeout=<ms>          Timeout in milliseconds for device discovery [default: 2000].
 )";
 static const bool show_help = true;

@@ -7,130 +7,147 @@ Device::Device(const std::string& uri)
     channel_(grpc::CreateChannel(uri, grpc::InsecureChannelCredentials())),
     rpc_(synapse::SynapseDevice::NewStub(channel_)) {}
 
-bool Device::configure(Config* config) {
+auto Device::configure(Config* config) -> science::Status {
   config->set_device(this);
 
   grpc::ClientContext context;
 
   synapse::DeviceConfiguration req = config->to_proto();
   synapse::Status res;
-  bool ok = false;
+  science::Status status;
   bool done = false;
   std::mutex m;
   std::condition_variable cv;
 
   rpc_->async()->Configure(
     &context, &req, &res,
-    [this, &res, &ok, &done, &m, &cv](grpc::Status status) mutable {
-      bool _ok = status.ok();
-      if (!ok) {
-        _ok = handle_status_response(res);
+    [this, &res, &status, &done, &m, &cv](grpc::Status gstatus) mutable {
+      science::Status s;
+      if (!gstatus.ok()) {
+        s = { static_cast<science::StatusCode>(gstatus.error_code()), gstatus.error_message() };
+      } else {
+        s = handle_status_response(res);
       }
 
       std::lock_guard<std::mutex> lock(m);
       done = true;
-      ok = _ok;
+      status = s;
       cv.notify_one();
     });
 
   std::unique_lock<std::mutex> lock(m);
   cv.wait(lock, [&done] { return done; });
-  return ok;
+  return status;
 }
 
-std::optional<synapse::DeviceInfo> Device::info() {
+auto Device::info(synapse::DeviceInfo* info) -> science::Status {
   grpc::ClientContext context;
 
   google::protobuf::Empty req;
   synapse::DeviceInfo res;
-  bool ok = false;
+  science::Status status;
   bool done = false;
   std::mutex m;
   std::condition_variable cv;
 
   rpc_->async()->Info(
     &context, &req, &res,
-    [&ok, &done, &m, &cv](grpc::Status status) {
-      bool _ok = status.ok();
-      if (!_ok) {
-        _ok = false;
+    [&status, &done, &m, &cv](grpc::Status gstatus) {
+      science::Status s;
+      if (!gstatus.ok()) {
+        s = { static_cast<science::StatusCode>(gstatus.error_code()), gstatus.error_message() };
       }
 
       std::lock_guard<std::mutex> lock(m);
       done = true;
-      ok = _ok;
+      status = s;
       cv.notify_one();
     });
 
   std::unique_lock<std::mutex> lock(m);
   cv.wait(lock, [&done] { return done; });
-  if (!ok) {
-    return std::nullopt;
+  if (status.ok()) {
+    info->CopyFrom(res);
   }
-  return res;
+  return status;
 }
 
-bool Device::start() {
+auto Device::start() -> science::Status {
   grpc::ClientContext context;
 
   google::protobuf::Empty req;
   synapse::Status res;
-  bool ok = false;
+  science::Status status;
   bool done = false;
   std::mutex m;
   std::condition_variable cv;
 
   rpc_->async()->Start(
     &context, &req, &res,
-    [this, &res, &ok, &done, &m, &cv](grpc::Status status) {
-      bool _ok = status.ok();
-      if (!ok) {
-        _ok = handle_status_response(res);
+    [this, &res, &status, &done, &m, &cv](grpc::Status gstatus) {
+      science::Status s;
+      if (!gstatus.ok()) {
+        s = { static_cast<science::StatusCode>(gstatus.error_code()), gstatus.error_message() };
+      } else {
+        s = handle_status_response(res);
       }
 
       std::lock_guard<std::mutex> lock(m);
       done = true;
-      ok = _ok;
+      status = s;
       cv.notify_one();
     });
 
   std::unique_lock<std::mutex> lock(m);
   cv.wait(lock, [&done] { return done; });
-  return ok;
+  return status;
 }
 
-bool Device::stop() {
+auto Device::stop() -> science::Status {
   grpc::ClientContext context;
 
   google::protobuf::Empty req;
   synapse::Status res;
-  bool ok = false;
+  science::Status status;
   bool done = false;
   std::mutex m;
   std::condition_variable cv;
 
   rpc_->async()->Stop(
     &context, &req, &res,
-    [this, &res, &ok, &done, &m, &cv](grpc::Status status) {
-      bool _ok = status.ok();
-      if (!ok) {
-        _ok = handle_status_response(res);
+    [this, &res, &status, &done, &m, &cv](grpc::Status gstatus) {
+      science::Status s;
+      if (!gstatus.ok()) {
+        s = { static_cast<science::StatusCode>(gstatus.error_code()), gstatus.error_message() };
+      } else {
+        s = handle_status_response(res);
       }
 
       std::lock_guard<std::mutex> lock(m);
       done = true;
-      ok = _ok;
+      status = s;
       cv.notify_one();
     });
 
   std::unique_lock<std::mutex> lock(m);
   cv.wait(lock, [&done] { return done; });
-  return ok;
+  return status;
 }
 
-bool Device::handle_status_response(const synapse::Status& status) {
+auto Device::sockets() const -> const std::vector<synapse::NodeSocket>& {
+  return sockets_;
+}
+
+auto Device::uri() const -> const std::string& {
+  return uri_;
+}
+
+auto Device::handle_status_response(const synapse::Status& status) -> science::Status {
   if (status.code() != synapse::StatusCode::kOk) {
-    return false;
+    return {
+      science::StatusCode::kInternal,
+      "(code: " + std::to_string(status.code()) + "): " + status.message()
+    };
   }
 
   sockets_.clear();
@@ -140,7 +157,7 @@ bool Device::handle_status_response(const synapse::Status& status) {
     sockets_.push_back(s);
   }
 
-  return true;
+  return {};
 }
 
 }  // namespace synapse

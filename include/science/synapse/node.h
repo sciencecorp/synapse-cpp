@@ -19,6 +19,7 @@ class Device;
 class Node {
  public:
   explicit Node(const synapse::NodeType& node_type);
+  virtual ~Node() = default;
 
   auto id() const -> uint64_t;
   auto set_device(const Device* device) -> void;
