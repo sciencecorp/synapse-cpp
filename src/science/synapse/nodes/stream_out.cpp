@@ -9,9 +9,13 @@
 
 namespace synapse {
 
-StreamOut::StreamOut(std::optional<ChannelMask> channel_mask, std::optional<std::string> multicast_group)
-  : UdpNode(NodeType::kStreamOut),
-    channel_mask_(channel_mask),
+StreamOut::StreamOut(
+  const synapse::DataType& data_type,
+  const std::vector<uint32_t>& shape,
+  std::optional<std::string> multicast_group
+) : UdpNode(NodeType::kStreamOut),
+    data_type_(data_type),
+    shape_(shape),
     multicast_group_(multicast_group) {}
 
 auto StreamOut::get_host(std::string* host) -> science::Status {
@@ -97,18 +101,15 @@ auto StreamOut::read(std::vector<std::byte>* out) -> science::Status {
 auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> void {
   synapse::StreamOutConfig* config = proto->mutable_stream_out();
 
-  if (channel_mask_.has_value()) {
-    const auto& channels = channel_mask_->channels();
-    for (size_t c = 0; c < channels.size(); ++c) {
-      if (!channels[c]) {
-        continue;
-      }
-      config->add_ch_mask(c);
-    }
+  config->set_data_type(data_type_);
+
+  for (const auto& dim : shape_) {
+    config->add_shape(dim);
   }
 
   if (multicast_group_.has_value()) {
     config->set_multicast_group(multicast_group_.value());
+    config->set_use_multicast(true);
   }
 }
 

@@ -9,7 +9,12 @@
 
 namespace synapse {
 
-StreamIn::StreamIn() : UdpNode(NodeType::kStreamIn) {}
+StreamIn::StreamIn(
+  const synapse::DataType& data_type,
+  const std::vector<uint32_t>& shape
+) : UdpNode(NodeType::kStreamIn),
+    data_type_(data_type),
+    shape_(shape) {}
 
 auto StreamIn::write(const std::vector<std::byte>& in) -> science::Status {
   if (!sock() || !addr()) {
@@ -27,6 +32,12 @@ auto StreamIn::write(const std::vector<std::byte>& in) -> science::Status {
 
 auto StreamIn::p_to_proto(synapse::NodeConfig* proto) -> void {
   synapse::StreamInConfig* config = proto->mutable_stream_in();
+
+  config->set_data_type(data_type_);
+
+  for (const auto& dim : shape_) {
+    config->add_shape(dim);
+  }
 }
 
 }  // namespace synapse

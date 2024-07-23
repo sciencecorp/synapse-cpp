@@ -13,7 +13,11 @@ namespace synapse {
 
 class StreamOut : public UdpNode {
  public:
-  StreamOut(std::optional<ChannelMask> channel_mask, std::optional<std::string> multicast_group);
+  StreamOut(
+    const synapse::DataType& data_type,
+    const std::vector<uint32_t>& shape,
+    std::optional<std::string> multicast_group
+  );
 
   auto read(std::vector<std::byte>* out) -> science::Status;
 
@@ -21,8 +25,9 @@ class StreamOut : public UdpNode {
   auto p_to_proto(synapse::NodeConfig* proto) -> void override;
 
  private:
-  std::optional<ChannelMask> channel_mask_;
-  std::optional<std::string> multicast_group_;
+  const synapse::DataType data_type_;
+  const std::vector<uint32_t> shape_;
+  const std::optional<std::string> multicast_group_;
 
   auto init() -> science::Status;
   auto get_host(std::string* host) -> science::Status override;

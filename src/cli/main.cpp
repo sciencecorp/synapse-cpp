@@ -87,7 +87,11 @@ auto stream(const CliArgs& args) -> int {
   if (read) {
     std::string group_str = args.count("--multicast") ? args.at("--multicast").asString() : "";
     std::optional<std::string> group = !group_str.empty() ? std::make_optional(group_str) : std::nullopt;
-    auto stream_out = std::make_shared<synapse::StreamOut>(std::nullopt, group);
+    auto stream_out = std::make_shared<synapse::StreamOut>(
+      synapse::DataType::kBroadband,
+      std::vector<uint32_t>{4},
+      group
+    );
     auto electrical_broadband = std::make_shared<synapse::ElectricalBroadband>(
       0, 30000, 8, 1, std::nullopt
     );
@@ -120,23 +124,20 @@ auto stream(const CliArgs& args) -> int {
         return static_cast<int>(s.code());
       }
 
-      if (out.size() < 4) {
-        std::cerr << "Error: invalid data read" << std::endl;
-        return 1;
+      std::cout << " - read (" << out.size() << "): ";
+      for (const auto& byte : out) {
+        std::cout << std::to_integer<unsigned int>(byte) << " ";
       }
-      int value = 0;
-      for (int i = 0; i < 4; i++) {
-        value = (value << 8) + static_cast<int>(out[i]);
-      }
-      std::cout << " - read (" << out.size() << "): " << std::to_string(value) << std::endl;
+      std::cout << std::endl;
     }
 
     std::cout << "- done." << std::endl;
   } else {
-    auto stream_in = std::make_shared<synapse::StreamIn>();
-    auto optical_stim = std::make_shared<synapse::OpticalStimulation>(
-      0, 30000, 8, 1, std::nullopt
+    auto stream_in = std::make_shared<synapse::StreamIn>(
+      synapse::DataType::kImage,
+      std::vector<uint32_t>{4}
     );
+    auto optical_stim = std::make_shared<synapse::OpticalStimulation>(0, 30000, 8, 1, std::nullopt);
     config.add_node(stream_in);
     config.add_node(optical_stim);
     config.connect(stream_in, optical_stim);
