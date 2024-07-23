@@ -6,7 +6,6 @@
 
 #include "science/scipp/status.h"
 #include "science/synapse/api/nodes/stream_out.pb.h"
-#include "science/synapse/channel_mask.h"
 #include "science/synapse/nodes/udp_node.h"
 
 namespace synapse {

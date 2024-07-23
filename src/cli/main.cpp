@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "cli.h"
+#include "science/scipp/status.h"
 #include "science/synapse/device.h"
 #include "science/synapse/nodes/electrical_broadband.h"
 #include "science/synapse/nodes/optical_stimulation.h"
