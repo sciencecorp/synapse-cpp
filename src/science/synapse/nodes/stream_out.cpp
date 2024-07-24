@@ -18,6 +18,27 @@ StreamOut::StreamOut(
     shape_(shape),
     multicast_group_(multicast_group) {}
 
+auto StreamOut::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
+  if (!proto.has_stream_out()) {
+    return { science::StatusCode::kInvalidArgument, "missing stream_out config" };
+  }
+
+  const auto& config = proto.stream_out();
+  auto data_type = config.data_type();
+  auto shape = std::vector<uint32_t>(config.shape().begin(), config.shape().end());
+
+  std::optional<std::string> multicast_group = std::nullopt;
+  if (config.use_multicast()) {
+    if (config.multicast_group().empty()) {
+      return { science::StatusCode::kInvalidArgument, "use_multicast is true, but config is missing multicast_group" };
+    }
+    multicast_group = config.multicast_group();
+  }
+
+  *node = std::make_shared<StreamOut>(data_type, shape, multicast_group);
+  return {};
+}
+
 auto StreamOut::get_host(std::string* host) -> science::Status {
   if (multicast_group_) {
     *host = multicast_group_.value();

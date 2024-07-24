@@ -16,6 +16,19 @@ StreamIn::StreamIn(
     data_type_(data_type),
     shape_(shape) {}
 
+auto StreamIn::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
+  if (!proto.has_stream_in()) {
+    return { science::StatusCode::kInvalidArgument, "missing stream_in config" };
+  }
+
+  const auto& config = proto.stream_in();
+  auto data_type = config.data_type();
+  auto shape = std::vector<uint32_t>(config.shape().begin(), config.shape().end());
+
+  *node = std::make_shared<StreamIn>(data_type, shape);
+  return {};
+}
+
 auto StreamIn::write(const std::vector<std::byte>& in) -> science::Status {
   if (!sock() || !addr()) {
     auto s = UdpNode::init();

@@ -4,9 +4,12 @@ namespace synapse {
 
 ChannelMask::ChannelMask(size_t size) : channels_(size, true) {}
 
-ChannelMask::ChannelMask(ChannelMaskBits channels) : channels_(channels) {}
+ChannelMask::ChannelMask(std::vector<uint32_t> channels) : channels_(channels) {}
 
-auto ChannelMask::channels() const -> ChannelMaskBits {
+ChannelMask::ChannelMask(std::vector<uint32_t>::const_iterator begin, std::vector<uint32_t>::const_iterator end)
+  : channels_(begin, end) {}
+
+auto ChannelMask::channels() const -> std::vector<uint32_t> {
   return channels_;
 }
 

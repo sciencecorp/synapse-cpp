@@ -1,11 +1,46 @@
 #include "science/synapse/config.h"
 #include "science/synapse/nodes/electrical_broadband.h"
-#include "science/synapse/nodes/optical_stimulation.h"
+#include "science/synapse/nodes/electrical_stim.h"
+#include "science/synapse/nodes/optical_broadband.h"
+#include "science/synapse/nodes/optical_stim.h"
+#include "science/synapse/nodes/spike_detect.h"
+#include "science/synapse/nodes/spectral_filter.h"
 #include "science/synapse/nodes/stream_in.h"
 #include "science/synapse/nodes/stream_out.h"
 
 
 namespace synapse {
+
+auto create_node(const synapse::NodeConfig& config, std::shared_ptr<Node>* node_ptr) -> science::Status {
+  switch (config.type()) {
+    case synapse::NodeType::kElectricalBroadband:
+      return ElectricalBroadband::from_proto(config, node_ptr);
+
+    case synapse::NodeType::kElectricalStim:
+      return ElectricalStim::from_proto(config, node_ptr);
+
+    case synapse::NodeType::kOpticalBroadband:
+      return OpticalBroadband::from_proto(config, node_ptr);
+
+    case synapse::NodeType::kOpticalStim:
+      return OpticalStim::from_proto(config, node_ptr);
+
+    case synapse::NodeType::kSpikeDetect:
+      return SpikeDetect::from_proto(config, node_ptr);
+
+    case synapse::NodeType::kSpectralFilter:
+      return SpectralFilter::from_proto(config, node_ptr);
+
+    case synapse::NodeType::kStreamIn:
+      return StreamIn::from_proto(config, node_ptr);
+
+    case synapse::NodeType::kStreamOut:
+      return StreamOut::from_proto(config, node_ptr);
+
+    default:
+      return { science::StatusCode::kInvalidArgument, "unknown node type \"" + std::to_string(config.type()) + "\"" };
+  }
+}
 
 auto Config::add(std::vector<std::shared_ptr<Node>> nodes) -> science::Status {
   science::Status s;
@@ -100,6 +135,46 @@ auto Config::to_proto() -> synapse::DeviceConfiguration {
   }
 
   return config;
+}
+
+auto Config::from_proto(const synapse::DeviceConfiguration& proto, Config* config) -> science::Status {
+  for (const auto& node_config : proto.nodes()) {
+    std::shared_ptr<Node> node_ptr;
+    auto s = create_node(node_config, &node_ptr);
+    if (!s.ok()) {
+      return s;
+    }
+
+    if (!node_ptr->id()) {
+      s = config->add_node(node_ptr);
+      if (!s.ok()) {
+        return s;
+      }
+    } else {
+      config->nodes_.push_back(node_ptr);
+    }
+  }
+
+  for (const auto& connection : proto.connections()) {
+    auto src = std::find_if(config->nodes_.begin(), config->nodes_.end(), [&](auto& n) {
+      return n->id() == connection.src_node_id();
+    });
+    auto dst = std::find_if(config->nodes_.begin(), config->nodes_.end(), [&](auto& n) {
+      return n->id() == connection.dst_node_id();
+    });
+
+    if (src == config->nodes_.end()) {
+      return { science::StatusCode::kInvalidArgument, "src node not found" };
+    }
+
+    if (dst == config->nodes_.end()) {
+      return { science::StatusCode::kInvalidArgument, "dst node not found" };
+    }
+
+    config->connections_.push_back({ (*src)->id(), (*dst)->id() });
+  }
+
+  return {};
 }
 
 }  // namespace synapse

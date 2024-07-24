@@ -1,15 +1,15 @@
 #pragma once
 
 #include <memory>
-#include "science/synapse/api/nodes/electrical_broadband.pb.h"
+#include "science/synapse/api/nodes/electrical_stim.pb.h"
 #include "science/synapse/channel_mask.h"
 #include "science/synapse/node.h"
 
 namespace synapse {
 
-class ElectricalBroadband : public Node {
+class ElectricalStim : public Node {
  public:
-  explicit ElectricalBroadband(
+  explicit ElectricalStim(
     uint32_t peripheral_id,
     uint32_t sample_rate,
     uint32_t bit_width,
@@ -30,7 +30,7 @@ class ElectricalBroadband : public Node {
   uint32_t peripheral_id_;
   uint32_t sample_rate_;
   uint32_t bit_width_;
-  uint32_t gain_;
+  uint32_t lsb_;
   std::optional<ChannelMask> channel_mask_;
 };
 

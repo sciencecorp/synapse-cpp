@@ -58,6 +58,15 @@ class Config {
    */
   auto to_proto() -> synapse::DeviceConfiguration;
 
+  /**
+   * Convert the given DeviceConfiguration proto to its corresponding Config instance, with nodes and connections.
+   * 
+   * @param proto The DeviceConfiguration proto message.
+   * @param config The Config instance to populate.
+   * @return science::Status
+   */
+  [[nodiscard]] static auto from_proto(const synapse::DeviceConfiguration& proto, Config* config) -> science::Status;
+
  protected:
   friend class Device;
   [[nodiscard]] auto set_device(const Device* device) -> science::Status;

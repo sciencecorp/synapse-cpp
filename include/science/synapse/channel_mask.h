@@ -10,17 +10,16 @@
 
 namespace synapse {
 
-using ChannelMaskBits = std::vector<bool>;
-
 class ChannelMask {
  public:
   explicit ChannelMask(size_t size);
-  explicit ChannelMask(ChannelMaskBits channels);
+  explicit ChannelMask(std::vector<uint32_t> channels);
+  ChannelMask(std::vector<uint32_t>::const_iterator begin, std::vector<uint32_t>::const_iterator end);
 
-  auto channels() const -> ChannelMaskBits;
+  auto channels() const -> std::vector<uint32_t>;
 
  private:
-  ChannelMaskBits channels_;
+  std::vector<uint32_t> channels_;
 };
 
 }  // namespace synapse
