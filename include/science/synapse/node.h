@@ -5,6 +5,7 @@
 #include <vector>
 #include <utility>
 
+#include "science/scipp/status.h"
 #include "science/synapse/api/node.pb.h"
 
 namespace synapse {
@@ -21,8 +22,8 @@ class Node {
   explicit Node(const synapse::NodeType& node_type);
   virtual ~Node() = default;
 
-  auto id() const -> uint64_t;
-  auto set_device(const Device* device) -> void;
+  [[nodiscard]] auto id() const -> uint64_t;
+  [[nodiscard]] auto set_device(const Device* device) -> science::Status;
   auto to_proto(synapse::NodeConfig* proto) -> void;
 
  protected:

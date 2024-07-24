@@ -8,7 +8,10 @@ Device::Device(const std::string& uri)
     rpc_(synapse::SynapseDevice::NewStub(channel_)) {}
 
 auto Device::configure(Config* config) -> science::Status {
-  config->set_device(this);
+  auto s = config->set_device(this);
+  if (!s.ok()) {
+    return { s.code(), "failed to set device: " + s.message() };
+  }
 
   grpc::ClientContext context;
 

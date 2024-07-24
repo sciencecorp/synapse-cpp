@@ -6,7 +6,7 @@
 #include "science/scipp/status.h"
 #include "science/synapse/device.h"
 #include "science/synapse/nodes/electrical_broadband.h"
-#include "science/synapse/nodes/optical_stimulation.h"
+#include "science/synapse/nodes/optical_stim.h"
 #include "science/synapse/nodes/stream_in.h"
 #include "science/synapse/nodes/stream_out.h"
 #include "science/synapse/util/discover.h"
@@ -16,8 +16,7 @@
   if (!s.ok()) { \
     std::cerr << " - error: " << s.message() << std::endl; \
     return static_cast<int>(s.code()); \
-  } \
-  std::cout << " - done." << std::endl;
+  }
 
 using synapse::Device;
 using synapse::DeviceAdvertisement;
@@ -33,6 +32,7 @@ auto discover(const CliArgs& args) -> int {
   std::cout << "Discovering devices..." << std::endl;
   auto status = discover(code, timeout, &discovered);
   CHECK_STATUS(status)
+  std::cout << " - done." << std::endl;
 
   for (const auto& device : discovered) {
     std::cout
@@ -96,34 +96,28 @@ auto stream(const CliArgs& args) -> int {
     auto electrical_broadband = std::make_shared<synapse::ElectricalBroadband>(
       0, 30000, 8, 1, std::nullopt
     );
-    config.add_node(stream_out);
-    config.add_node(electrical_broadband);
-    config.connect(electrical_broadband, stream_out);
+    s = config.add_node(stream_out);
+    CHECK_STATUS(s)
+    s = config.add_node(electrical_broadband);
+    CHECK_STATUS(s)
+    s = config.connect(electrical_broadband, stream_out);
+    CHECK_STATUS(s)
 
     std::cout << "Configuring device..." << std::endl;
     s = device.configure(&config);
-    if (!s.ok()) {
-      std::cerr << "- error: failed to configure device: " << s.message() << std::endl;
-      return 1;
-    }
+    CHECK_STATUS(s)
     std::cout << "- done." << std::endl;
 
     std::cout << "Starting device..." << std::endl;
     s = device.start();
-    if (!s.ok()) {
-      std::cerr << "- error: failed to start device" << std::endl;
-      return 1;
-    }
+    CHECK_STATUS(s)
     std::cout << "- done." << std::endl;
 
     std::cout << "Reading from device @ " << uri << std::endl;
     while (true) {
       std::vector<std::byte> out;
       s = stream_out->read(&out);
-      if (!s.ok()) {
-        std::cerr << " - error: " << s.message() << std::endl;
-        return static_cast<int>(s.code());
-      }
+      CHECK_STATUS(s)
 
       std::cout << " - read (" << out.size() << "): ";
       for (const auto& byte : out) {
@@ -138,25 +132,22 @@ auto stream(const CliArgs& args) -> int {
       synapse::DataType::kImage,
       std::vector<uint32_t>{4}
     );
-    auto optical_stim = std::make_shared<synapse::OpticalStimulation>(0, 30000, 8, 1, std::nullopt);
-    config.add_node(stream_in);
-    config.add_node(optical_stim);
-    config.connect(stream_in, optical_stim);
+    auto optical_stim = std::make_shared<synapse::OpticalStim>(0, 30000, 8, 1, std::nullopt);
+    s = config.add_node(stream_in);
+    CHECK_STATUS(s)
+    s = config.add_node(optical_stim);
+    CHECK_STATUS(s)
+    s = config.connect(stream_in, optical_stim);
+    CHECK_STATUS(s)
 
     std::cout << "Configuring device..." << std::endl;
     s = device.configure(&config);
-    if (!s.ok()) {
-      std::cerr << "- error: failed to configure device: " << s.message() << std::endl;
-      return 1;
-    }
+    CHECK_STATUS(s)
     std::cout << "- done." << std::endl;
 
     std::cout << "Starting device..." << std::endl;
     s = device.start();
-    if (!s.ok()) {
-      std::cerr << "- error: failed to start device" << std::endl;
-      return 1;
-    }
+    CHECK_STATUS(s)
     std::cout << "- done." << std::endl;
 
     std::cout << "Writing to device @ " << uri << std::endl;
@@ -167,11 +158,8 @@ auto stream(const CliArgs& args) -> int {
         in.push_back(static_cast<std::byte>((value >> (8 * (3 - i))) & 0xFF));
       }
 
-      auto data = stream_in->write(in);
-      if (!s.ok()) {
-        std::cerr << " - error: " << s.message() << std::endl;
-        return static_cast<int>(s.code());
-      }
+      s = stream_in->write(in);
+      CHECK_STATUS(s)
 
       std::cout << " - wrote (" << in.size() << "): " << std::to_string(value) << std::endl;
       value++;
@@ -198,6 +186,7 @@ int main(int argc, char** argv) {
     std::cout << "Fetching device info..." << std::endl;
     auto s = device.info(&info);
     CHECK_STATUS(s)
+    std::cout << " - done." << std::endl;
 
     std::cout << info.DebugString() << std::endl;
     return static_cast<int>(s.code());
@@ -210,6 +199,7 @@ int main(int argc, char** argv) {
     std::cout << "Starting device..." << std::endl;
     auto s = device.start();
     CHECK_STATUS(s)
+    std::cout << " - done." << std::endl;
     return static_cast<int>(s.code());
   }
 
@@ -220,6 +210,7 @@ int main(int argc, char** argv) {
     std::cout << "Stopping device..." << std::endl;
     auto s = device.stop();
     CHECK_STATUS(s)
+    std::cout << " - done." << std::endl;
     return static_cast<int>(s.code());
   }
 

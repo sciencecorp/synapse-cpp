@@ -72,10 +72,18 @@ auto Config::gen_node_id() -> uint64_t {
   return nodes_.size() + 1;
 }
 
-auto Config::set_device(const Device* device) -> void {
-  for (auto& node : nodes_) {
-    node->set_device(device);
+auto Config::set_device(const Device* device) -> science::Status {
+  if (device == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "device must not be null" };
   }
+  science::Status s;
+  for (auto& node : nodes_) {
+    s = node->set_device(device);
+    if (!s.ok()) {
+      return s;
+    }
+  }
+  return s;
 }
 
 auto Config::to_proto() -> synapse::DeviceConfiguration {

@@ -8,8 +8,15 @@ auto Node::id() const -> uint64_t {
   return id_;
 }
 
-auto Node::set_device(const Device* device) -> void {
+auto Node::set_device(const Device* device) -> science::Status {
+  if (device == nullptr) {
+    return {
+        science::StatusCode::kInvalidArgument,
+        "device must not be null",
+    };
+  }
   device_ = device;
+  return {};
 }
 
 auto Node::to_proto(synapse::NodeConfig* proto) -> void {

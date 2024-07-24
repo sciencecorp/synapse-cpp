@@ -30,7 +30,7 @@ class Config {
    * @param nodes Node configurations to add
    * @return science::Status 
    */
-  auto add(std::vector<std::shared_ptr<Node>> nodes) -> science::Status;
+  [[nodiscard]] auto add(std::vector<std::shared_ptr<Node>> nodes) -> science::Status;
 
   /**
    * Add a node to the configuration.
@@ -39,7 +39,7 @@ class Config {
    * @param node A node configuration to add
    * @return science::Status 
    */
-  auto add_node(std::shared_ptr<Node> node) -> science::Status;
+  [[nodiscard]] auto add_node(std::shared_ptr<Node> node) -> science::Status;
 
   /**
    * Connect the output of one node to the input of another.
@@ -49,7 +49,7 @@ class Config {
    * @param dst The destination node.
    * @return science::Status 
    */
-  auto connect(std::weak_ptr<Node> src, std::weak_ptr<Node> dst) -> science::Status;
+  [[nodiscard]] auto connect(std::weak_ptr<Node> src, std::weak_ptr<Node> dst) -> science::Status;
 
   /**
    * Convert the configuration to its corresponding DeviceConfiguration proto message.
@@ -60,13 +60,13 @@ class Config {
 
  protected:
   friend class Device;
-  auto set_device(const Device* device) -> void;
+  [[nodiscard]] auto set_device(const Device* device) -> science::Status;
 
  private:
   std::vector<std::shared_ptr<Node>> nodes_;
   std::vector<std::pair<uint64_t, uint64_t>> connections_;
 
-  auto gen_node_id() -> uint64_t;
+  [[nodiscard]] auto gen_node_id() -> uint64_t;
 };
 
 }  // namespace synapse

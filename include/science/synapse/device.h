@@ -27,33 +27,33 @@ class Device {
   /**
    * @see synapse::SynapseDevice::Stub#Configure
    */
-  auto configure(Config* config) -> science::Status;
+  [[nodiscard]] auto configure(Config* config) -> science::Status;
   /**
    * @see synapse::SynapseDevice::Stub#info
    */
-  auto info(synapse::DeviceInfo* info) -> science::Status;
+  [[nodiscard]] auto info(synapse::DeviceInfo* info) -> science::Status;
   /**
    * @see synapse::SynapseDevice::Stub#start
    */
-  auto start() -> science::Status;
+  [[nodiscard]] auto start() -> science::Status;
   /**
    * @see synapse::SynapseDevice::Stub#start
    */
-  auto stop() -> science::Status;
+  [[nodiscard]] auto stop() -> science::Status;
 
   /**
    * List the node sockets configured on the device. 
    * 
    * @return std::vector<synapse::NodeSocket> 
    */
-  auto sockets() const -> const std::vector<synapse::NodeSocket>&;
+  [[nodiscard]] auto sockets() const -> const std::vector<synapse::NodeSocket>&;
 
   /**
    * List the node sockets configured on the device. 
    * 
    * @return std::vector<synapse::NodeSocket> 
    */
-  auto uri() const -> const std::string&;
+  [[nodiscard]] auto uri() const -> const std::string&;
 
  private:
   std::string uri_;
@@ -62,7 +62,7 @@ class Device {
 
   std::vector<synapse::NodeSocket> sockets_;
 
-  auto handle_status_response(const synapse::Status& status) -> science::Status;
+  [[nodiscard]] auto handle_status_response(const synapse::Status& status) -> science::Status;
 };
 
 }  // namespace synapse
