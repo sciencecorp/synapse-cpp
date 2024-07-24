@@ -5,3 +5,5 @@ find_package(Protobuf REQUIRED CONFIG)
 find_package(science-scipp REQUIRED CONFIG)
 
 include("${CMAKE_CURRENT_LIST_DIR}/synapseTargets.cmake")
+
+set(SYNAPSE_PROTO_IMPORT_DIR "@PROTO_FILES_DIR@")

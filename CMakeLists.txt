@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.23.5)
 
 SET(VCPKG_MANIFEST_FEATURES  "" CACHE STRING "vcpkg features")
+
 option(SYNAPSE_BUILD_CLI "Build CLI application" OFF)
 if(SYNAPSE_BUILD_CLI)
   list(APPEND VCPKG_MANIFEST_FEATURES "cli")
@@ -10,7 +11,11 @@ option(SYNAPSE_BUILD_TESTS "Build tests" OFF)
 if(SYNAPSE_BUILD_TESTS)
   list(APPEND VCPKG_MANIFEST_FEATURES "tests")
 endif()
-message("VCPKG_MANIFEST_FEATURES: ${VCPKG_MANIFEST_FEATURES}")
+
+option(SYNAPSE_PACKAGE_PROTOS "Package proto files" OFF)
+if(SYNAPSE_PACKAGE_PROTOS)
+  list(APPEND VCPKG_MANIFEST_FEATURES "protos")
+endif()
 
 project(synapse VERSION 0.0.1)
 
@@ -37,8 +42,6 @@ set(PROTO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/sciencecorp/synapse-
 set(PROTO_OUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/science/synapse")
 file(MAKE_DIRECTORY ${PROTO_OUT_DIR})
 file(GLOB_RECURSE PROTOS ${PROTO_INCLUDE_DIR}/api/*.proto)
-
-message(STATUS "Proto out dir: ${PROTO_OUT_DIR}")
 
 protobuf_generate(
   TARGET ${PROJECT_NAME}
@@ -88,6 +91,16 @@ target_link_libraries(
 
 # Installation and export settings
 include(GNUInstallDirs)
+
+if ("protos" IN_LIST VCPKG_MANIFEST_FEATURES)
+  set(PROTO_FILES_DIR "${CMAKE_INSTALL_DATADIR}/science/synapse")
+
+  install(
+    DIRECTORY ${PROTO_INCLUDE_DIR}/
+    DESTINATION ${PROTO_FILES_DIR}
+  )
+endif()
+
 install(
   TARGETS ${PROJECT_NAME}
   EXPORT ${PROJECT_NAME}Targets

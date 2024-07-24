@@ -13,6 +13,9 @@
       "description": "synapse client CLI",
       "dependencies": ["docopt"]
     },
+    "protos": {
+      "description": "synapse api proto files"
+    },
     "tests": {
       "description": "synapse client test suite",
       "dependencies": ["gtest"]
