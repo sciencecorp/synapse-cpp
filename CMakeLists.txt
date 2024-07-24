@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.23.5)
 
 SET(VCPKG_MANIFEST_FEATURES  "" CACHE STRING "vcpkg features")
+option(SYNAPSE_BUILD_CLI "Build CLI application" OFF)
+if(SYNAPSE_BUILD_CLI)
+  list(APPEND VCPKG_MANIFEST_FEATURES "cli")
+endif()
+
+option(SYNAPSE_BUILD_TESTS "Build tests" OFF)
+if(SYNAPSE_BUILD_TESTS)
+  list(APPEND VCPKG_MANIFEST_FEATURES "tests")
+endif()
 message("VCPKG_MANIFEST_FEATURES: ${VCPKG_MANIFEST_FEATURES}")
 
 project(synapse VERSION 0.0.1)
