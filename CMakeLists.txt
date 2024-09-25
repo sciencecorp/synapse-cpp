@@ -78,6 +78,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
+  "$<INSTALL_INTERFACE:include/science/synapse>"
   PRIVATE
   ${PROTO_OUT_DIR}
 )
