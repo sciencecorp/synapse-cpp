@@ -1,35 +1,12 @@
 cmake_minimum_required(VERSION 3.23.5)
 
-SET(VCPKG_MANIFEST_FEATURES  "" CACHE STRING "vcpkg features")
-
-option(SYNAPSE_BUILD_CLI "Build CLI application" OFF)
-if(SYNAPSE_BUILD_CLI)
-  list(APPEND VCPKG_MANIFEST_FEATURES "cli")
-endif()
-
-option(SYNAPSE_BUILD_TESTS "Build tests" OFF)
-if(SYNAPSE_BUILD_TESTS)
-  list(APPEND VCPKG_MANIFEST_FEATURES "tests")
-endif()
-
-option(SYNAPSE_PACKAGE_PROTOS "Package proto files" OFF)
-if(SYNAPSE_PACKAGE_PROTOS)
-  list(APPEND VCPKG_MANIFEST_FEATURES "protos")
-endif()
-
 project(synapse VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-Wall -Wno-deprecated-declarations -Wno-unused-but-set-variable")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-set(CMAKE_SHARED_LINKER_FLAGS "-pg")
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(gRPC CONFIG REQUIRED CONFIG)
+find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
 find_package(science-scipp REQUIRED CONFIG)
 
@@ -60,27 +37,31 @@ protobuf_generate(
   GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
   PLUGIN protoc-gen-grpc=$<TARGET_FILE:gRPC::grpc_cpp_plugin>
   PROTOC_OUT_DIR ${PROTO_OUT_DIR}
-  OUT_VAR PROTO_SOURCES
+  OUT_VAR GRPC_SOURCES
 )
 
 file(GLOB_RECURSE SOURCES src/science/synapse/*.cpp)
-
 target_sources(
   ${PROJECT_NAME}
   PRIVATE
   ${SOURCES}
+  ${PROTO_SOURCES}
+  ${GRPC_SOURCES}
 )
+
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/science/synapse>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>"
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/science/synapse>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+  $<INSTALL_INTERFACE:include>
+  $<INSTALL_INTERFACE:include/science/synapse>
   PRIVATE
-  ${PROTO_OUT_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
 target_link_libraries(
   ${PROJECT_NAME}
   PRIVATE
@@ -89,17 +70,7 @@ target_link_libraries(
   science::scipp
 )
 
-# Installation and export settings
 include(GNUInstallDirs)
-
-if ("protos" IN_LIST VCPKG_MANIFEST_FEATURES)
-  set(PROTO_FILES_DIR "${CMAKE_INSTALL_DATADIR}/science/synapse")
-
-  install(
-    DIRECTORY ${PROTO_INCLUDE_DIR}/
-    DESTINATION ${PROTO_FILES_DIR}
-  )
-endif()
 
 install(
   TARGETS ${PROJECT_NAME}
@@ -110,26 +81,29 @@ install(
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        FILES_MATCHING PATTERN "*.h")
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h"
+)
 
-# Export targets
-install(EXPORT ${PROJECT_NAME}Targets
-    FILE ${PROJECT_NAME}Targets.cmake
-    NAMESPACE science::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+install(
+  EXPORT ${PROJECT_NAME}Targets
+  FILE ${PROJECT_NAME}Targets.cmake
+  NAMESPACE science::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
 include(CMakePackageConfigHelpers)
-configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+install(
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
 
