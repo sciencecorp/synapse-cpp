@@ -9,10 +9,6 @@
     "overlay-ports": ["./external/sciencecorp/vcpkg/ports"]
   },
   "features": {
-    "cli": {
-      "description": "synapse client CLI",
-      "dependencies": ["docopt"]
-    },
     "protos": {
       "description": "synapse api proto files"
     },

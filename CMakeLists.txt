@@ -106,33 +106,5 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
-
-if ("cli" IN_LIST VCPKG_MANIFEST_FEATURES)
-  find_package(docopt REQUIRED CONFIG)
-
-  add_executable(cli ${CMAKE_CURRENT_SOURCE_DIR}/src/cli/main.cpp)
-
-  file(GLOB_RECURSE SOURCES_CLI src/cli/*.cpp)
-  target_sources(
-    cli
-    PRIVATE
-    ${SOURCES_CLI}
-  )
-
-  target_include_directories(
-    cli
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/cli
-  )
-
-  target_link_libraries(
-    cli
-    PRIVATE
-    docopt
-    science::scipp
-    ${PROJECT_NAME}
-  )
-endif()
-
 if ("tests" IN_LIST VCPKG_MANIFEST_FEATURES)
 endif()
