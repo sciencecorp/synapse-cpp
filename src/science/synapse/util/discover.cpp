@@ -73,8 +73,7 @@ auto validate_capability(const std::string& capability_str) -> bool {
   return cap_svc == BROADCAST_SERVICE;
 }
 
-auto discover(const std::string& code,
-              unsigned int timeout_ms,
+auto discover(unsigned int timeout_ms,
               std::vector<DeviceAdvertisement>* discovered) -> science::Status {
   const std::string host = BROADCAST_ADDR;
   const uint16_t port = BROADCAST_PORT;
@@ -94,8 +93,7 @@ auto discover(const std::string& code,
   }
 
   auto saddr = addr(host, port);
-  std::string c = !code.empty() ? code : "0";
-  std::string payload = "DISCOVER " + c;
+  std::string payload = "DISCOVER";
 
   rc = sendto(sock, payload.c_str(), payload.size(), 0, reinterpret_cast<sockaddr*>(&saddr), sizeof(saddr));
   if (rc < 0) {
