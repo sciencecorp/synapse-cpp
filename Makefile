@@ -16,3 +16,7 @@ configure:
 .PHONY: install
 install:
 	cmake --install build
+
+.PHONY: test
+test:
+	./build/synapse_tests

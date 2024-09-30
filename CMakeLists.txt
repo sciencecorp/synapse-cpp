@@ -107,4 +107,27 @@ install(
 )
 
 if ("tests" IN_LIST VCPKG_MANIFEST_FEATURES)
+  enable_testing()
+  
+  find_package(GTest REQUIRED)
+  
+  file(GLOB_RECURSE TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp")
+  
+  add_executable(${PROJECT_NAME}_tests ${TEST_SOURCES})
+  
+  target_link_libraries(${PROJECT_NAME}_tests
+    PRIVATE
+    ${PROJECT_NAME}
+    GTest::GTest
+    GTest::Main
+  )
+  
+  target_include_directories(${PROJECT_NAME}_tests
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/test
+  )
+  
+  include(GoogleTest)
+  gtest_discover_tests(${PROJECT_NAME}_tests)
 endif()

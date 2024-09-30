@@ -39,10 +39,14 @@ auto parse(const std::string& host,
     };
   }
 
-  uint16_t port = 0;
+  uint64_t port = 0;
   try {
     port = std::stoi(payload[3]);
   } catch (const std::exception& e) {
+    return { StatusCode::kInvalidArgument, "invalid port in response from server" };
+  }
+
+  if (port < 1 || port > 65535) {
     return { StatusCode::kInvalidArgument, "invalid port in response from server" };
   }
 
@@ -50,7 +54,7 @@ auto parse(const std::string& host,
   parsed->capability = payload[2];
   parsed->name = payload[4];
   parsed->host = host;
-  parsed->port = port;
+  parsed->port = static_cast<uint16_t>(port);
 
   return {};
 }
