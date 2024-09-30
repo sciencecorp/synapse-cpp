@@ -11,10 +11,10 @@ class OpticalStim : public Node {
  public:
   explicit OpticalStim(
     uint32_t peripheral_id,
-    uint32_t sample_rate,
+    std::optional<ChannelMask> pixel_mask,
     uint32_t bit_width,
-    uint32_t gain,
-    std::optional<ChannelMask> pixel_mask
+    uint32_t frame_rate,
+    uint32_t gain
   );
 
   [[nodiscard]] static auto from_proto(
@@ -27,10 +27,10 @@ class OpticalStim : public Node {
 
  private:
   uint32_t peripheral_id_;
-  uint32_t sample_rate_;
-  uint32_t bit_width_;
-  uint32_t gain_;
   std::optional<ChannelMask> pixel_mask_;
+  uint32_t bit_width_;
+  uint32_t frame_rate_;
+  uint32_t gain_;
 };
 
 }  // namespace synapse

@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 
 #include <memory>
 #include <string>
@@ -13,7 +12,7 @@ namespace synapse {
 class ChannelMask {
  public:
   explicit ChannelMask(size_t size);
-  explicit ChannelMask(std::vector<uint32_t> channels);
+  explicit ChannelMask(const std::vector<uint32_t>& channels);
   ChannelMask(std::vector<uint32_t>::const_iterator begin, std::vector<uint32_t>::const_iterator end);
 
   auto channels() const -> std::vector<uint32_t>;

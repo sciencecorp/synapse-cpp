@@ -4,16 +4,16 @@ namespace synapse {
 
 OpticalStim::OpticalStim(
   uint32_t peripheral_id,
-  uint32_t sample_rate,
+  std::optional<ChannelMask> pixel_mask,
   uint32_t bit_width,
-  uint32_t gain,
-  std::optional<ChannelMask> pixel_mask
+  uint32_t frame_rate,
+  uint32_t gain
 ) : Node(NodeType::kOpticalStim),
     peripheral_id_(peripheral_id),
-    sample_rate_(sample_rate),
+    pixel_mask_(pixel_mask),
     bit_width_(bit_width),
-    gain_(gain),
-    pixel_mask_(pixel_mask) {}
+    frame_rate_(frame_rate),
+    gain_(gain) {}
 
 auto OpticalStim::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
   if (!proto.has_optical_stim()) {
@@ -29,10 +29,10 @@ auto OpticalStim::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<N
 
   *node = std::make_shared<OpticalStim>(
     config.peripheral_id(),
-    config.sample_rate(),
+    pixel_mask,
     config.bit_width(),
-    config.gain(),
-    pixel_mask
+    config.frame_rate(),
+    config.gain()
   );
 
   return {};
@@ -49,8 +49,8 @@ auto OpticalStim::p_to_proto(synapse::NodeConfig* proto) -> void {
   }
 
   config->set_peripheral_id(peripheral_id_);
-  config->set_sample_rate(sample_rate_);
   config->set_bit_width(bit_width_);
+  config->set_frame_rate(frame_rate_);
   config->set_gain(gain_);
 }
 

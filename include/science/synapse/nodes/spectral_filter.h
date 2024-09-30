@@ -10,8 +10,8 @@ class SpectralFilter : public Node {
  public:
   explicit SpectralFilter(
     const synapse::SpectralFilterMethod& method,
-    uint32_t low_cutoff_mhz,
-    uint32_t high_cutoff_mhz
+    uint32_t low_cutoff_hz,
+    uint32_t high_cutoff_hz
   );
 
   [[nodiscard]] static auto from_proto(
@@ -25,8 +25,8 @@ class SpectralFilter : public Node {
 
  private:
   synapse::SpectralFilterMethod method_;
-  uint32_t low_cutoff_mhz_;
-  uint32_t high_cutoff_mhz_;
+  uint32_t low_cutoff_hz_;
+  uint32_t high_cutoff_hz_;
 };
 
 }  // namespace synapse

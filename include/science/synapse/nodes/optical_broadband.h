@@ -10,10 +10,11 @@ namespace synapse {
 class OpticalBroadband : public Node {
  public:
   explicit OpticalBroadband(
-    uint32_t sample_rate,
+    uint32_t peripheral_id,
+    std::optional<ChannelMask> pixel_mask,
     uint32_t bit_width,
-    uint32_t gain,
-    std::optional<ChannelMask> pixel_mask
+    uint32_t frame_rate,
+    uint32_t gain
   );
 
   [[nodiscard]] static auto from_proto(
@@ -26,10 +27,11 @@ class OpticalBroadband : public Node {
   auto p_to_proto(synapse::NodeConfig* proto) -> void override;
 
  private:
-  uint32_t sample_rate_;
-  uint32_t bit_width_;
-  uint32_t gain_;
+  uint32_t peripheral_id_;
   std::optional<ChannelMask> pixel_mask_;
+  uint32_t bit_width_;
+  uint32_t frame_rate_;
+  uint32_t gain_;
 };
 
 }  // namespace synapse

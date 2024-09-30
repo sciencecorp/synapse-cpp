@@ -4,16 +4,20 @@ namespace synapse {
 
 ElectricalBroadband::ElectricalBroadband(
   uint32_t peripheral_id,
-  uint32_t sample_rate,
+  const std::vector<Ch>& channels,
   uint32_t bit_width,
-  uint32_t gain,
-  std::optional<ChannelMask> channel_mask
+  uint32_t sample_rate,
+  float gain,
+  float low_cutoff_hz,
+  float high_cutoff_hz
 ) : Node(NodeType::kElectricalBroadband),
     peripheral_id_(peripheral_id),
-    sample_rate_(sample_rate),
+    channels_(channels),
     bit_width_(bit_width),
+    sample_rate_(sample_rate),
     gain_(gain),
-    channel_mask_(channel_mask) {}
+    low_cutoff_hz_(low_cutoff_hz),
+    high_cutoff_hz_(high_cutoff_hz) {}
 
 auto ElectricalBroadband::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
   if (!proto.has_electrical_broadband()) {
@@ -21,18 +25,23 @@ auto ElectricalBroadband::from_proto(const synapse::NodeConfig& proto, std::shar
   }
 
   const auto& config = proto.electrical_broadband();
-  std::optional<ChannelMask> ch_mask;
-  if (config.ch_mask_size() > 0) {
-    std::vector<uint32_t> indices(config.ch_mask().begin(), config.ch_mask().end());
-    ch_mask = ChannelMask(indices);
+  std::vector<Ch> channels;
+  for (const auto& channel : config.channels()) {
+    channels.push_back({
+      channel.id(),
+      channel.electrode_id(),
+      channel.reference_id()
+    });
   }
 
   *node = std::make_shared<ElectricalBroadband>(
     config.peripheral_id(),
-    config.sample_rate(),
+    channels,
     config.bit_width(),
+    config.sample_rate(),
     config.gain(),
-    ch_mask
+    config.low_cutoff_hz(),
+    config.high_cutoff_hz()
   );
 
   return {};
@@ -41,17 +50,16 @@ auto ElectricalBroadband::from_proto(const synapse::NodeConfig& proto, std::shar
 auto ElectricalBroadband::p_to_proto(synapse::NodeConfig* proto) -> void {
   synapse::ElectricalBroadbandConfig* config = proto->mutable_electrical_broadband();
 
-  if (channel_mask_.has_value()) {
-    const auto& channels = channel_mask_->channels();
-    for (const auto& c : channels) {
-      config->add_ch_mask(c);
-    }
+  for (const auto& channel : channels_) {
+    channel.to_proto(config->add_channels());
   }
 
   config->set_peripheral_id(peripheral_id_);
-  config->set_sample_rate(sample_rate_);
   config->set_bit_width(bit_width_);
+  config->set_sample_rate(sample_rate_);
   config->set_gain(gain_);
+  config->set_low_cutoff_hz(low_cutoff_hz_);
+  config->set_high_cutoff_hz(high_cutoff_hz_);
 }
 
 }  // namespace synapse

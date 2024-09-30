@@ -3,15 +3,17 @@
 namespace synapse {
 
 SpikeDetect::SpikeDetect(
-  const synapse::SpikeDetectOptions::SpikeDetectMode& mode,
+  const synapse::SpikeDetectConfig::SpikeDetectMode& mode,
   uint32_t threshold_uv,
   const ChannelMask& template_uv,
-  bool sort
+  bool sort,
+  uint32_t bin_size_ms
 ) : Node(NodeType::kSpikeDetect),
     mode_(mode),
     threshold_uv_(threshold_uv),
     template_uv_(template_uv),
-    sort_(sort) {}
+    sort_(sort),
+    bin_size_ms_(bin_size_ms) {}
 
 auto SpikeDetect::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
   if (!proto.has_spike_detect()) {
@@ -25,7 +27,8 @@ auto SpikeDetect::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<N
     config.mode(),
     config.threshold_uv(),
     template_uv,
-    config.sort()
+    config.sort(),
+    config.bin_size_ms()
   );
 
   return {};
@@ -45,6 +48,7 @@ auto SpikeDetect::p_to_proto(synapse::NodeConfig* proto) -> void {
   config->set_mode(mode_);
   config->set_threshold_uv(threshold_uv_);
   config->set_sort(sort_);
+  config->set_bin_size_ms(bin_size_ms_);
 }
 
 }  // namespace synapse

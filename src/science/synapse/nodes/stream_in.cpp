@@ -9,12 +9,7 @@
 
 namespace synapse {
 
-StreamIn::StreamIn(
-  const synapse::DataType& data_type,
-  const std::vector<uint32_t>& shape
-) : UdpNode(NodeType::kStreamIn),
-    data_type_(data_type),
-    shape_(shape) {}
+StreamIn::StreamIn(const synapse::DataType& data_type) : UdpNode(NodeType::kStreamIn), data_type_(data_type) {}
 
 auto StreamIn::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
   if (!proto.has_stream_in()) {
@@ -23,9 +18,7 @@ auto StreamIn::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node
 
   const auto& config = proto.stream_in();
   auto data_type = config.data_type();
-  auto shape = std::vector<uint32_t>(config.shape().begin(), config.shape().end());
-
-  *node = std::make_shared<StreamIn>(data_type, shape);
+  *node = std::make_shared<StreamIn>(data_type);
   return {};
 }
 
@@ -47,10 +40,6 @@ auto StreamIn::p_to_proto(synapse::NodeConfig* proto) -> void {
   synapse::StreamInConfig* config = proto->mutable_stream_in();
 
   config->set_data_type(data_type_);
-
-  for (const auto& dim : shape_) {
-    config->add_shape(dim);
-  }
 }
 
 }  // namespace synapse

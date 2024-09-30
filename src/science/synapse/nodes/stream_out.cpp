@@ -9,13 +9,8 @@
 
 namespace synapse {
 
-StreamOut::StreamOut(
-  const synapse::DataType& data_type,
-  const std::vector<uint32_t>& shape,
-  std::optional<std::string> multicast_group
-) : UdpNode(NodeType::kStreamOut),
-    data_type_(data_type),
-    shape_(shape),
+StreamOut::StreamOut(const std::string& label, const std::string& multicast_group) : UdpNode(NodeType::kStreamOut),
+    label_(label),
     multicast_group_(multicast_group) {}
 
 auto StreamOut::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
@@ -24,33 +19,26 @@ auto StreamOut::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Nod
   }
 
   const auto& config = proto.stream_out();
-  auto data_type = config.data_type();
-  auto shape = std::vector<uint32_t>(config.shape().begin(), config.shape().end());
+  const auto& label = config.label();
 
-  std::optional<std::string> multicast_group = std::nullopt;
-  if (config.use_multicast()) {
-    if (config.multicast_group().empty()) {
-      return { science::StatusCode::kInvalidArgument, "use_multicast is true, but config is missing multicast_group" };
-    }
-    multicast_group = config.multicast_group();
+  if (config.multicast_group().empty()) {
+    return { science::StatusCode::kInvalidArgument, "multicast_group is required but not set" };
   }
+  const auto& multicast_group = config.multicast_group();
 
-  *node = std::make_shared<StreamOut>(data_type, shape, multicast_group);
+  *node = std::make_shared<StreamOut>(label, multicast_group);
   return {};
 }
 
 auto StreamOut::get_host(std::string* host) -> science::Status {
-  if (multicast_group_) {
-    *host = multicast_group_.value();
-    return {};
+  if (multicast_group_.empty()) {
+    return { science::StatusCode::kInvalidArgument, "multicast_group required but not set" };
   }
-
-  return UdpNode::get_host(host);
+  *host = multicast_group_;
+  return {};
 }
 
 auto StreamOut::init() -> science::Status {
-  std::cout << "Initializing socket" << std::endl;
-
   auto s  = UdpNode::init();
   if (!s.ok()) {
     return s;
@@ -75,22 +63,21 @@ auto StreamOut::init() -> science::Status {
   }
 
   auto saddr = addr().value();
-  std::cout << "binding to: " << inet_ntoa(saddr.sin_addr) << ":" << ntohs(saddr.sin_port) << std::endl;
 
+  std::cout << "binding to " << inet_ntoa(saddr.sin_addr) << ":" << ntohs(saddr.sin_port) << std::endl;
   rc = bind(sock(), reinterpret_cast<sockaddr*>(&saddr), sizeof(saddr));
   if (rc < 0) {
     return { science::StatusCode::kInternal, "error binding socket (code: " + std::to_string(rc) + ")" };
   }
 
-  if (multicast_group_.has_value()) {
-    ip_mreq mreq;
-    mreq.imr_multiaddr.s_addr = inet_addr(multicast_group_.value().c_str());
-    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+  std::cout << "joining multicast group " << multicast_group_ << std::endl;
+  ip_mreq mreq;
+  mreq.imr_multiaddr.s_addr = inet_addr(multicast_group_.c_str());
+  mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 
-    rc = setsockopt(sock(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
-    if (rc < 0) {
-      return { science::StatusCode::kInternal, "error joining multicast group (code: " + std::to_string(rc) + ")" };
-    }
+  rc = setsockopt(sock(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
+  if (rc < 0) {
+    return { science::StatusCode::kInternal, "error joining multicast group (code: " + std::to_string(rc) + ")" };
   }
 
   return {};
@@ -122,16 +109,8 @@ auto StreamOut::read(std::vector<std::byte>* out) -> science::Status {
 auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> void {
   synapse::StreamOutConfig* config = proto->mutable_stream_out();
 
-  config->set_data_type(data_type_);
-
-  for (const auto& dim : shape_) {
-    config->add_shape(dim);
-  }
-
-  if (multicast_group_.has_value()) {
-    config->set_multicast_group(multicast_group_.value());
-    config->set_use_multicast(true);
-  }
+  config->set_label(label_);
+  config->set_multicast_group(multicast_group_);
 }
 
 }  // namespace synapse

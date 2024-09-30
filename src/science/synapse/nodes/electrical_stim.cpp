@@ -4,16 +4,16 @@ namespace synapse {
 
 ElectricalStim::ElectricalStim(
   uint32_t peripheral_id,
-  uint32_t sample_rate,
+  const std::vector<Ch>& channels,
   uint32_t bit_width,
-  uint32_t lsb,
-  std::optional<ChannelMask> channel_mask
+  uint32_t sample_rate,
+  uint32_t lsb
 ) : Node(NodeType::kElectricalStim),
     peripheral_id_(peripheral_id),
-    sample_rate_(sample_rate),
+    channels_(channels),
     bit_width_(bit_width),
-    lsb_(lsb),
-    channel_mask_(channel_mask) {}
+    sample_rate_(sample_rate),
+    lsb_(lsb) {}
 
 auto ElectricalStim::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
   if (!proto.has_electrical_stim()) {
@@ -21,18 +21,21 @@ auto ElectricalStim::from_proto(const synapse::NodeConfig& proto, std::shared_pt
   }
 
   const auto& config = proto.electrical_stim();
-  std::optional<ChannelMask> ch_mask;
-  if (config.ch_mask_size() > 0) {
-    std::vector<uint32_t> indices(config.ch_mask().begin(), config.ch_mask().end());
-    ch_mask = ChannelMask(indices);
+  std::vector<Ch> channels;
+  for (const auto& channel : config.channels()) {
+    channels.push_back({
+      channel.id(),
+      channel.electrode_id(),
+      channel.reference_id()
+    });
   }
 
   *node = std::make_shared<ElectricalStim>(
     config.peripheral_id(),
-    config.sample_rate(),
+    channels,
     config.bit_width(),
-    config.lsb(),
-    ch_mask
+    config.sample_rate(),
+    config.lsb()
   );
 
   return {};
@@ -41,16 +44,14 @@ auto ElectricalStim::from_proto(const synapse::NodeConfig& proto, std::shared_pt
 auto ElectricalStim::p_to_proto(synapse::NodeConfig* proto) -> void {
   synapse::ElectricalStimConfig* config = proto->mutable_electrical_stim();
 
-  if (channel_mask_.has_value()) {
-    const auto& channels = channel_mask_->channels();
-    for (const auto& c : channels) {
-      config->add_ch_mask(c);
-    }
+  for (const auto& channel : channels_) {
+    channel.to_proto(config->add_channels());
   }
 
+
   config->set_peripheral_id(peripheral_id_);
-  config->set_sample_rate(sample_rate_);
   config->set_bit_width(bit_width_);
+  config->set_sample_rate(sample_rate_);
   config->set_lsb(lsb_);
 }
 

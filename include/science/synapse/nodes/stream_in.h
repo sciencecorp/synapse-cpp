@@ -13,7 +13,7 @@ namespace synapse {
 
 class StreamIn : public UdpNode {
  public:
-  StreamIn(const synapse::DataType& data_type, const std::vector<uint32_t>& shape);
+  explicit StreamIn(const synapse::DataType& data_type);
 
   auto write(const std::vector<std::byte>& in) -> science::Status;
 
@@ -27,7 +27,6 @@ class StreamIn : public UdpNode {
 
  private:
   const synapse::DataType data_type_;
-  const std::vector<uint32_t> shape_;
 
   auto init() -> science::Status;
 };

@@ -58,7 +58,22 @@ auto UdpNode::get_port(uint16_t* port) -> science::Status {
     return { science::StatusCode::kFailedPrecondition, "socket not found, has Device been configured?" };
   }
 
-  *port = self->bind();
+  auto addr = self->bind();
+
+  auto pos = addr.find(':');
+
+  if (pos == std::string::npos) {
+    return { science::StatusCode::kInvalidArgument, "invalid bind address" };
+  }
+
+  try {
+    *port = std::stoi(addr.substr(pos + 1));
+  } catch (const std::invalid_argument& e) {
+    return { science::StatusCode::kInvalidArgument, "invalid bind port" };
+  } catch (const std::out_of_range& e) {
+    return { science::StatusCode::kInternal, "bind port out of range" };
+  }
+
   return {};
 }
 

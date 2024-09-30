@@ -10,10 +10,11 @@ namespace synapse {
 class SpikeDetect : public Node {
  public:
   explicit SpikeDetect(
-    const synapse::SpikeDetectOptions::SpikeDetectMode& mode,
+    const synapse::SpikeDetectConfig::SpikeDetectMode& mode,
     uint32_t threshold_uv,
     const ChannelMask& template_uv,
-    bool sort
+    bool sort,
+    uint32_t bin_size_ms
   );
 
   [[nodiscard]] static auto from_proto(
@@ -26,10 +27,11 @@ class SpikeDetect : public Node {
   auto p_to_proto(synapse::NodeConfig* proto) -> void override;
 
  private:
-  synapse::SpikeDetectOptions::SpikeDetectMode mode_;
+  synapse::SpikeDetectConfig::SpikeDetectMode mode_;
   uint32_t threshold_uv_;
   ChannelMask template_uv_;
   bool sort_;
+  uint32_t bin_size_ms_;
 };
 
 }  // namespace synapse
