@@ -1,20 +1,22 @@
 #pragma once
 
 #include <memory>
-#include "science/synapse/api/nodes/optical_stim.pb.h"
-#include "science/synapse/channel_mask.h"
+#include <vector>
+#include "science/synapse/api/channel.pb.h"
+#include "science/synapse/api/nodes/electrical_stimulation.pb.h"
+#include "science/synapse/channel.h"
 #include "science/synapse/node.h"
 
 namespace synapse {
 
-class OpticalStim : public Node {
+class ElectricalStimulation : public Node {
  public:
-  explicit OpticalStim(
+  explicit ElectricalStimulation(
     uint32_t peripheral_id,
-    std::optional<ChannelMask> pixel_mask,
+    const std::vector<Ch>& channels,
     uint32_t bit_width,
-    uint32_t frame_rate,
-    uint32_t gain
+    uint32_t sample_rate,
+    uint32_t lsb
   );
 
   [[nodiscard]] static auto from_proto(
@@ -27,10 +29,10 @@ class OpticalStim : public Node {
 
  private:
   uint32_t peripheral_id_;
-  std::optional<ChannelMask> pixel_mask_;
+  std::vector<Ch> channels_;
   uint32_t bit_width_;
-  uint32_t frame_rate_;
-  uint32_t gain_;
+  uint32_t sample_rate_;
+  uint32_t lsb_;
 };
 
 }  // namespace synapse

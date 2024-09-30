@@ -1,8 +1,8 @@
 #include "science/synapse/config.h"
 #include "science/synapse/nodes/electrical_broadband.h"
-#include "science/synapse/nodes/electrical_stim.h"
+#include "science/synapse/nodes/electrical_stimulation.h"
 #include "science/synapse/nodes/optical_broadband.h"
-#include "science/synapse/nodes/optical_stim.h"
+#include "science/synapse/nodes/optical_stimulation.h"
 #include "science/synapse/nodes/spike_detect.h"
 #include "science/synapse/nodes/spectral_filter.h"
 #include "science/synapse/nodes/stream_in.h"
@@ -16,14 +16,14 @@ auto create_node(const synapse::NodeConfig& config, std::shared_ptr<Node>* node_
     case synapse::NodeType::kElectricalBroadband:
       return ElectricalBroadband::from_proto(config, node_ptr);
 
-    case synapse::NodeType::kElectricalStim:
-      return ElectricalStim::from_proto(config, node_ptr);
+    case synapse::NodeType::kElectricalStimulation:
+      return ElectricalStimulation::from_proto(config, node_ptr);
 
     case synapse::NodeType::kOpticalBroadband:
       return OpticalBroadband::from_proto(config, node_ptr);
 
-    case synapse::NodeType::kOpticalStim:
-      return OpticalStim::from_proto(config, node_ptr);
+    case synapse::NodeType::kOpticalStimulation:lation:
+      return OpticalStimulation::from_proto(config, node_ptr);
 
     case synapse::NodeType::kSpikeDetect:
       return SpikeDetect::from_proto(config, node_ptr);
