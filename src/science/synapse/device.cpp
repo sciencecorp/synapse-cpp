@@ -59,6 +59,8 @@ auto Device::info(synapse::DeviceInfo* info) -> science::Status {
       science::Status s;
       if (!gstatus.ok()) {
         s = { static_cast<science::StatusCode>(gstatus.error_code()), gstatus.error_message() };
+      } else {
+        s = handle_status_response(res.status());
       }
 
       std::lock_guard<std::mutex> lock(m);
