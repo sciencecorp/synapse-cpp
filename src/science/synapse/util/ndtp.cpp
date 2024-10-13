@@ -225,13 +225,13 @@ auto NDTPHeader::pack() const -> std::vector<uint8_t> {
 
 auto NDTPHeader::unpack(const std::vector<uint8_t>& data) -> NDTPHeader {
   if (data.size() < kNDTPHeaderSize) {
-    throw std::runtime_error("Invalid header size: expected at least " + std::to_string(kNDTPHeaderSize) + " bytes");
+    throw std::invalid_argument("Invalid header size: expected at least " + std::to_string(kNDTPHeaderSize) + " bytes");
   }
   const uint8_t* ptr = data.data();
 
   uint8_t version = *ptr++;
   if (version != kNDTPVersion) {
-    throw std::runtime_error(
+    throw std::invalid_argument(
         "Incompatible version: expected " + std::to_string(kNDTPVersion) + ", got " + std::to_string(version)
     );
   }
@@ -374,7 +374,6 @@ static const uint32_t NDTPPayloadSpiketrain_BIT_WIDTH = 2;
 NDTPPayloadSpiketrain::NDTPPayloadSpiketrain(const std::vector<int>& spike_counts) : spike_counts(spike_counts) {}
 
 auto NDTPPayloadSpiketrain::pack() const -> std::vector<uint8_t> {
-  std::vector<uint8_t> result(4 + spike_counts.size() * 4);
   int num_counts = spike_counts.size();
   int clamp_value = (1 << NDTPPayloadSpiketrain_BIT_WIDTH) - 1;
   std::vector<int> clamped_counts;
@@ -383,8 +382,13 @@ auto NDTPPayloadSpiketrain::pack() const -> std::vector<uint8_t> {
   for (const int& count : spike_counts) {
     clamped_counts.push_back(std::min(count, clamp_value));
   }
-  // pack sample count (4 bytes)
-  std::memcpy(result.data(), &num_counts, 4);
+
+  std::vector<uint8_t> result(4);  // Start with 4 bytes for num_counts
+  // pack sample count (4 bytes, little-endian)
+  result[0] = num_counts & 0xFF;
+  result[1] = (num_counts >> 8) & 0xFF;
+  result[2] = (num_counts >> 16) & 0xFF;
+  result[3] = (num_counts >> 24) & 0xFF;
 
   // pack clamped spike counts
   auto [bytes, final_bit_offset] = to_bytes<int>(clamped_counts, NDTPPayloadSpiketrain_BIT_WIDTH, {}, 0, false);
@@ -397,8 +401,7 @@ auto NDTPPayloadSpiketrain::unpack(const std::vector<uint8_t>& data) -> NDTPPayl
   if (data.size() < 4) {
     throw std::runtime_error("Invalid data size for NDTPPayloadSpiketrain");
   }
-  uint32_t num_counts;
-  std::memcpy(&num_counts, data.data(), sizeof(uint32_t));
+  uint32_t num_counts = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
 
   std::vector<uint8_t> payload(data.begin() + 4, data.end());
   auto bits_needed = num_counts * NDTPPayloadSpiketrain_BIT_WIDTH;
