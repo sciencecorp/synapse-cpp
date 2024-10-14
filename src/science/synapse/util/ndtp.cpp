@@ -25,8 +25,8 @@ namespace synapse {
 
 template <typename T>
 auto to_ints(
-    const std::vector<uint8_t>& data, int bit_width, int count = 0, int start_bit = 0, bool is_signed = false,
-    bool byteorder_is_little = false
+    const std::vector<uint8_t>& data, int bit_width, int count, int start_bit, bool is_signed,
+    bool byteorder_is_little
 ) -> std::tuple<std::vector<T>, int, std::vector<uint8_t>> {
   if (bit_width <= 0) {
     throw std::invalid_argument("bit width must be > 0");
@@ -39,7 +39,7 @@ auto to_ints(
   size_t data_len = truncated_data.size();
 
   if (count > 0 && data_len < (bit_width * count + 7) / 8) {
-    throw std::runtime_error(
+    throw std::invalid_argument(
         "insufficient data for " + std::to_string(count) + " x " + std::to_string(bit_width) +
         " bit values (expected " + std::to_string((bit_width * count + 7) / 8) + " bytes, given " +
         std::to_string(data_len) + " bytes)"
@@ -123,7 +123,7 @@ auto to_ints(
       }
       values_array[value_index++] = current_value;
     } else if (count == 0) {
-      throw std::runtime_error(
+      throw std::invalid_argument(
           std::to_string(bits_in_current_value) + " bits left over, not enough to form a complete value of bit width " +
           std::to_string(bit_width)
       );
@@ -142,8 +142,8 @@ auto to_ints(
 
 template <typename T>
 auto to_bytes(
-    const std::vector<T>& values, int bit_width, std::vector<T> existing = std::vector<T>(),
-    int writing_bit_offset = 0, bool is_signed = false, bool byteorder_is_little = false
+    const std::vector<T>& values, int bit_width, std::vector<uint8_t> existing, int writing_bit_offset, bool is_signed,
+    bool byteorder_is_little
 ) -> std::tuple<std::vector<uint8_t>, int> {
   int num_bits_to_write = values.size() * bit_width;
   int bit_offset = existing.empty() ? 0 : (existing.size() - 1) * 8 + writing_bit_offset;
@@ -160,7 +160,7 @@ auto to_bytes(
 
   for (const auto& value : values) {
     if (value < min_value || value > max_value) {
-      throw std::runtime_error(
+      throw std::invalid_argument(
           "Value " + std::to_string(value) + " cannot be represented in " + std::to_string(bit_width) + " bits"
       );
     }
@@ -353,7 +353,7 @@ auto NDTPPayloadBroadband::unpack(const std::vector<uint8_t>& data) -> NDTPPaylo
     offset += num_bytes;
 
     // unpack channel_data
-    auto [channel_data, end_bit, truncated_data] = to_ints<float>(channel_data_bytes, bit_width, num_samples, is_signed);
+    auto [channel_data, end_bit, truncated_data] = to_ints<float>(channel_data_bytes, bit_width, num_samples, 0, is_signed, false);
     channels.emplace_back(channel_id, channel_data);
   }
   return NDTPPayloadBroadband(is_signed, bit_width, sample_rate, channels);

@@ -8,6 +8,19 @@
 
 namespace synapse {
 
+template <typename T>
+auto to_ints(
+    const std::vector<uint8_t>& data, int bit_width, int count = 0, int start_bit = 0, bool is_signed = false,
+    bool byteorder_is_little = false
+) -> std::tuple<std::vector<T>, int, std::vector<uint8_t>>;
+
+template <typename T>
+auto to_bytes(
+    const std::vector<T>& values, int bit_width, std::vector<uint8_t> existing = std::vector<uint8_t>(),
+    int writing_bit_offset = 0, bool is_signed = false, bool byteorder_is_little = false
+) -> std::tuple<std::vector<uint8_t>, int>;
+
+
 class NDTPPayloadBroadbandChannelData {
  public:
   NDTPPayloadBroadbandChannelData(int channel_id, const std::vector<float>& channel_data);
@@ -55,8 +68,10 @@ class NDTPPayloadSpiketrain {
   auto pack() const -> std::vector<uint8_t>;
   static auto unpack(const std::vector<uint8_t>& data) -> NDTPPayloadSpiketrain;
 
-  [[nodiscard]] bool operator==(const NDTPPayloadSpiketrain& other) const;
-  [[nodiscard]] bool operator!=(const NDTPPayloadSpiketrain& other) const;
+  [[nodiscard]] bool operator==(const NDTPPayloadSpiketrain& other) const {
+    return spike_counts == other.spike_counts;
+  }
+  [[nodiscard]] bool operator!=(const NDTPPayloadSpiketrain& other) const { return !(*this == other); }
 };
 
 class NDTPHeader {
