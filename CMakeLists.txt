@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
+find_package(science-libndtp REQUIRED CONFIG)
 find_package(science-scipp REQUIRED CONFIG)
 
 add_library(${PROJECT_NAME})
@@ -67,6 +68,7 @@ target_link_libraries(
   PRIVATE
   gRPC::grpc++
   protobuf::libprotobuf
+  science::libndtp
   science::scipp
 )
 

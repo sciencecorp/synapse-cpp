@@ -5,9 +5,41 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "science/libndtp/ndtp.h"
+#include "science/libndtp/types.h"
 #include "science/synapse/device.h"
 
 namespace synapse {
+
+using science::libndtp::BinnedSpiketrainData;
+using science::libndtp::ElectricalBroadbandData;
+using science::libndtp::NDTPMessage;
+using science::libndtp::SynapseData;
+
+auto unpack(
+  const std::vector<uint8_t>& data,
+  SynapseData* out
+) -> science::Status {
+  NDTPMessage msg;
+  try {
+    msg = NDTPMessage::unpack(data);
+  } catch (const std::exception& e) {
+    return { science::StatusCode::kInternal, "error unpacking NDTP message: " + std::string(e.what()) };
+  }
+
+  switch (msg.header.data_type) {
+    case DataType::kBroadband:
+      *out = ElectricalBroadbandData::unpack(msg);
+      break;
+    case DataType::kSpiketrain:
+      *out = BinnedSpiketrainData::unpack(msg);
+      break;
+    default:
+      return { science::StatusCode::kInternal, "unknown data type: " + std::to_string(msg.header.data_type) };
+  }
+
+  return {};
+}
 
 StreamOut::StreamOut(const std::string& label, const std::string& multicast_group) : UdpNode(NodeType::kStreamOut),
     label_(label),
@@ -83,7 +115,7 @@ auto StreamOut::init() -> science::Status {
   return {};
 }
 
-auto StreamOut::read(std::vector<std::byte>* out) -> science::Status {
+auto StreamOut::read(SynapseData* data) -> science::Status {
   if (!sock() || !addr()) {
     auto s = init();
     if (!s.ok()) {
@@ -94,16 +126,17 @@ auto StreamOut::read(std::vector<std::byte>* out) -> science::Status {
   auto saddr = addr().value();
   socklen_t saddr_len = sizeof(saddr);
 
-  out->clear();
-  out->resize(1024);
-  auto rc = recvfrom(sock(), out->data(), out->size(), 0, reinterpret_cast<sockaddr*>(&saddr), &saddr_len);
+  std::vector<uint8_t> buf;
+  buf.resize(1024);
+  auto rc = recvfrom(sock(), buf.data(), buf.size(), 0, reinterpret_cast<sockaddr*>(&saddr), &saddr_len);
   if (rc < 0) {
-    out->resize(0);
+    buf.resize(0);
     return { science::StatusCode::kInternal, "error reading from socket (code: " + std::to_string(rc) + ")" };
   }
 
-  out->resize(rc);
-  return {};
+  buf.resize(rc);
+
+  return unpack(buf, data);
 }
 
 auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> void {
