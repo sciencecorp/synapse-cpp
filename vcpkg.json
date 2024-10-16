@@ -9,6 +9,9 @@
     "overlay-ports": ["./external/sciencecorp/vcpkg/ports"]
   },
   "features": {
+    "examples": {
+      "description": "synapse client examples"
+    },
     "protos": {
       "description": "synapse api proto files"
     },

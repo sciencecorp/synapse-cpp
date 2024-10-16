@@ -108,6 +108,14 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
+if ("examples" IN_LIST VCPKG_MANIFEST_FEATURES)
+  add_executable(stream_out examples/stream_out/main.cpp)
+  target_link_libraries(stream_out PRIVATE ${PROJECT_NAME} science::scipp)
+  set_target_properties(stream_out PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
+  )
+endif()
+
 if ("tests" IN_LIST VCPKG_MANIFEST_FEATURES)
   enable_testing()
   

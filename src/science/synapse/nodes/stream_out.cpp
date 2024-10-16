@@ -24,17 +24,21 @@ auto unpack(
   try {
     msg = NDTPMessage::unpack(data);
   } catch (const std::exception& e) {
+    std::cout << "Stream Out | error unpacking NDTP message: " << e.what() << std::endl;
     return { science::StatusCode::kInternal, "error unpacking NDTP message: " + std::string(e.what()) };
   }
 
   switch (msg.header.data_type) {
     case DataType::kBroadband:
+      std::cout << "- ebroadband" << std::endl;
       *out = ElectricalBroadbandData::unpack(msg);
       break;
     case DataType::kSpiketrain:
+      std::cout << "- spiketrain" << std::endl;
       *out = BinnedSpiketrainData::unpack(msg);
       break;
     default:
+      std::cout << "- unknown data type: " << msg.header.data_type << std::endl;
       return { science::StatusCode::kInternal, "unknown data type: " + std::to_string(msg.header.data_type) };
   }
 
@@ -135,6 +139,8 @@ auto StreamOut::read(SynapseData* data) -> science::Status {
   }
 
   buf.resize(rc);
+
+  std::cout << "Stream Out | got bytes len " << buf.size() << std::endl;
 
   return unpack(buf, data);
 }
