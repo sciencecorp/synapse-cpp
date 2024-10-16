@@ -66,6 +66,14 @@ class Config {
   [[nodiscard]] auto nodes() const -> const std::vector<std::shared_ptr<Node>>&;
 
   /**
+   * Set the device object.
+   * 
+   * @param device 
+   * @return science::Status 
+   */
+  [[nodiscard]] auto set_device(const Device* device) -> science::Status;
+
+  /**
    * Convert the configuration to its corresponding DeviceConfiguration proto message.
    *
    * @return synapse::DeviceConfiguration
@@ -83,7 +91,6 @@ class Config {
 
  protected:
   friend class Device;
-  [[nodiscard]] auto set_device(const Device* device) -> science::Status;
 
  private:
   std::vector<std::shared_ptr<Node>> nodes_;
