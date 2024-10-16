@@ -11,11 +11,18 @@ using synapse::Ch;
 using synapse::ElectricalBroadbandData;
 using synapse::SynapseData;
 
-auto stream(const std::string& uri) -> int {
-  std::string group = "239.0.0.117";
+auto stream(const std::string& uri, const std::string& group) -> int {
   synapse::Device device(uri);
   synapse::Config config;
   science::Status s;
+
+  synapse::DeviceInfo info;
+  s = device.info(&info);
+  if (!s.ok()) {
+    std::cout << "error getting device info: (" << static_cast<int>(s.code()) << ") " << s.message() << std::endl;
+    return 1;
+  }
+  std::cout << "device info: " << info.DebugString() << std::endl;
 
   auto stream_out = std::make_shared<synapse::StreamOut>("out", group);
 
@@ -36,14 +43,22 @@ auto stream(const std::string& uri) -> int {
   s = device.configure(&config);
 
   s = device.start();
+
   while (true) {
     SynapseData out;
     s = stream_out->read(&out);
 
+    std::cout << "-" << std::endl;
+    if (!s.ok()) {
+      std::cout << "error reading from stream out node: ("
+        << static_cast<int>(s.code()) << ") " << s.message() << std::endl;
+      continue;
+    }
+
     if (std::holds_alternative<ElectricalBroadbandData>(out)) {
       auto data = std::get<ElectricalBroadbandData>(out);
       std::cout << "recv electrical broadband data" << std::endl;
-      std::cout << "  - to: " << data.t0 << std::endl;
+      std::cout << "  - t0: " << data.t0 << std::endl;
       std::cout << "  - bit_width: " << data.bit_width << std::endl;
       std::cout << "  - is_signed: " << data.is_signed << std::endl;
       std::cout << "  - sample_rate: " << data.sample_rate << std::endl;
@@ -66,7 +81,9 @@ auto stream(const std::string& uri) -> int {
 }
 
 int main(int argc, char** argv) {
-  stream("10.40.60.203:647");
+  std::string uri = "192.168.0.1:647";
+  std::string group = "239.0.0.234";
+  stream(uri, group);
 
   return 0;
 }

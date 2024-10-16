@@ -128,7 +128,7 @@ auto StreamOut::read(SynapseData* data) -> science::Status {
   socklen_t saddr_len = sizeof(saddr);
 
   std::vector<uint8_t> buf;
-  buf.resize(1024);
+  buf.resize(8192);
   auto rc = recvfrom(sock(), buf.data(), buf.size(), 0, reinterpret_cast<sockaddr*>(&saddr), &saddr_len);
   if (rc < 0) {
     buf.resize(0);
