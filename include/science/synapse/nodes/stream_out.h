@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "science/libndtp/types.h"
 #include "science/scipp/status.h"
 #include "science/synapse/api/nodes/stream_out.pb.h"
 #include "science/synapse/nodes/udp_node.h"
@@ -15,7 +16,7 @@ class StreamOut : public UdpNode {
  public:
   StreamOut(const std::string& label, const std::string& multicast_group);
 
-  auto read(std::vector<std::byte>* out) -> science::Status;
+  auto read(science::libndtp::SynapseData* out) -> science::Status;
 
   [[nodiscard]] static auto from_proto(
     const synapse::NodeConfig& proto,

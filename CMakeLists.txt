@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
+find_package(science-libndtp REQUIRED CONFIG)
 find_package(science-scipp REQUIRED CONFIG)
 
 add_library(${PROJECT_NAME})
@@ -67,6 +68,7 @@ target_link_libraries(
   PRIVATE
   gRPC::grpc++
   protobuf::libprotobuf
+  science::libndtp
   science::scipp
 )
 
@@ -105,6 +107,14 @@ install(
   FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
+
+if ("examples" IN_LIST VCPKG_MANIFEST_FEATURES)
+  add_executable(stream_out examples/stream_out/main.cpp)
+  target_link_libraries(stream_out PRIVATE ${PROJECT_NAME} science::scipp)
+  set_target_properties(stream_out PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
+  )
+endif()
 
 if ("tests" IN_LIST VCPKG_MANIFEST_FEATURES)
   enable_testing()

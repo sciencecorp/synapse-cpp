@@ -41,61 +41,13 @@ Then you will be able to include it in your CMakelists:
 synapse provides CMake targets:
 
   find_package(synapse CONFIG REQUIRED)
-  target_link_libraries(main PRIVATE synapse::synapse)
+  target_link_libraries(main PRIVATE science::synapse)
 ```
 
 ## Writing clients
 
-This library offers a C++ interface to the Synapse API:
+This library offers a C++ interface to the Synapse API.
 
-```c++
-#include <memory>
+See the [examples](./examples) for more details.
 
-#include "science/scipp/status.h"
-#include "science/synapse/channel.h"
-#include "science/synapse/device.h"
-#include "science/synapse/nodes/electrical_broadband.h"
-#include "science/synapse/nodes/stream_out.h"
-
-auto stream() -> int {
-  const std::string uri = "127.0.0.1:647";
-  std::string group = "239.0.0.1";
-  synapse::Device device(uri);
-  synapse::Config config;
-  science::Status s;
-
-  auto stream_out = std::make_shared<synapse::StreamOut>("out", group);
-
-  std::vector<Ch> channels;
-  for (unsigned int i = 0; i < 19; i++) {
-    channels.push_back(synapse::Ch{
-      .id = i,
-      .electrode_id = i * 2,
-      .reference_id = i * 2 + 1,
-    });
-  }
-  auto electrical_broadband = std::make_shared<synapse::ElectricalBroadband>(
-    1, channels, 12, 30000, 20.0, 500, 6000);
-  s = config.add_node(stream_out);
-  s = config.add_node(electrical_broadband);
-  s = config.connect(electrical_broadband, stream_out);
-
-  s = device.configure(&config);
-
-  s = device.start();
-
-  while (true) {
-    std::vector<std::byte> out;
-    s = stream_out->read(&out);
-    // ...
-  }
-
-  return 1;
-}
-
-int main(int argc, char** argv) {
-  stream();
-
-  return 0;
-}
-```
+https://github.com/sciencecorp/synapse-cpp/blob/main/examples/stream_out/main.cpp
