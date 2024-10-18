@@ -22,7 +22,7 @@ auto unpack(
 ) -> science::Status {
   NDTPMessage msg;
   try {
-    msg = NDTPMessage::unpack(bytes);
+    msg = NDTPMessage::unpack(bytes, true);
   } catch (const std::exception& e) {
     std::cout << "Stream Out | error unpacking NDTP message: " << e.what() << std::endl;
     return { science::StatusCode::kInternal, "error unpacking NDTP message: " + std::string(e.what()) };
