@@ -77,7 +77,13 @@ auto stream(const std::string& uri, const std::string& group, bool configure) ->
         std::cout << "   - channel [" << c.channel_id << "]" << std::endl;
 
         for (size_t i = 0; i < std::min(n_samples, size_t(10)); i++) {
-          std::cout << "     - sample [" << i << "]: " << c.channel_data[i] << std::endl;
+          uint64_t sample = c.channel_data[i];
+          if (data.is_signed) {
+            int64_t sample_s = *reinterpret_cast<int64_t*>(&sample);
+            std::cout << "     - sample [" << i << "]: " << sample_s << std::endl;
+          } else {
+            std::cout << "     - sample [" << i << "]: " << sample << std::endl;
+          }
         }
       }
 
