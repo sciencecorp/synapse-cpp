@@ -52,7 +52,7 @@ auto stream(const std::string& uri, const std::string& group, bool configure) ->
 
     auto channel_mask = synapse::ChannelMask(0); // TODO(kevinc): should this be number of channels?
     auto spike_detect = std::make_shared<synapse::SpikeDetect>(
-        synapse::SpikeDetectConfig_SpikeDetectMode_kThreshold, 100, channel_mask, true, 10);
+        synapse::SpikeDetectConfig_SpikeDetectMode_kThreshold, 100, channel_mask, true, 25);
     s = config.add_node(spike_detect);
     s = config.connect(spectral_filter, spike_detect);
 
