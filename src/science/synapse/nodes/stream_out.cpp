@@ -3,6 +3,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "science/libndtp/ndtp.h"
@@ -72,26 +74,26 @@ auto StreamOut::get_host(std::string* host) -> science::Status {
 }
 
 auto StreamOut::init() -> science::Status {
-  auto s  = UdpNode::init();
+  auto s = UdpNode::init();
   if (!s.ok()) {
     return s;
   }
 
   int rc = 0;
   int on = 1;
-  rc = setsockopt(sock(), SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-  if (rc < 0) {
+  
+  int flags = fcntl(sock(), F_GETFL, 0);
+  if (flags < 0) {
     return {
       science::StatusCode::kInternal,
-      "error configuring socket options (code: " + std::to_string(rc) + ")"
+      "error getting socket flags (code: " + std::to_string(flags) + ")"
     };
   }
-
-  rc = setsockopt(sock(), SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on));
+  rc = fcntl(sock(), F_SETFL, flags | O_NONBLOCK);
   if (rc < 0) {
     return {
       science::StatusCode::kInternal,
-      "error configuring socket options (code: " + std::to_string(rc) + ")"
+      "error setting non-blocking mode (code: " + std::to_string(rc) + ")"
     };
   }
 
@@ -127,16 +129,34 @@ auto StreamOut::read(SynapseData* data) -> science::Status {
   auto saddr = addr().value();
   socklen_t saddr_len = sizeof(saddr);
 
+  fd_set readfds;
+  struct timeval tv;
+  tv.tv_sec = 0;
+  tv.tv_usec = 1000;
+
+  FD_ZERO(&readfds);
+  FD_SET(sock(), &readfds);
+
+  int ready = select(sock() + 1, &readfds, nullptr, nullptr, &tv);
+  if (ready < 0) {
+    return { science::StatusCode::kInternal, "error in select (code: " + std::to_string(errno) + ")" };
+  }
+  if (ready == 0) {
+    return { science::StatusCode::kUnavailable, "no data available" };
+  }
+
   std::vector<uint8_t> buf;
   buf.resize(8192);
   auto rc = recvfrom(sock(), buf.data(), buf.size(), 0, reinterpret_cast<sockaddr*>(&saddr), &saddr_len);
   if (rc < 0) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return { science::StatusCode::kUnavailable, "no data available" };
+    }
     buf.resize(0);
     return { science::StatusCode::kInternal, "error reading from socket (code: " + std::to_string(rc) + ")" };
   }
 
   buf.resize(rc);
-
   return unpack(buf, data);
 }
 
