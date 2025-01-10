@@ -114,6 +114,11 @@ if ("examples" IN_LIST VCPKG_MANIFEST_FEATURES)
   set_target_properties(stream_out PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
   )
+  add_executable(binned_spikes examples/binned_spikes/main.cpp)
+  target_link_libraries(binned_spikes PRIVATE ${PROJECT_NAME} science::scipp)
+  set_target_properties(binned_spikes PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
+  )
 endif()
 
 if ("tests" IN_LIST VCPKG_MANIFEST_FEATURES)
