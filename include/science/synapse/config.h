@@ -37,9 +37,10 @@ class Config {
    * The node will be assigned an ID.
    *
    * @param node A node configuration to add
+   * @param id The ID to assign to the node. If 0, a new ID will be generated.
    * @return science::Status
    */
-  [[nodiscard]] auto add_node(std::shared_ptr<Node> node) -> science::Status;
+  [[nodiscard]] auto add_node(std::shared_ptr<Node> node, uint64_t id = 0) -> science::Status;
 
   /**
    * Connect the output of one node to the input of another.
