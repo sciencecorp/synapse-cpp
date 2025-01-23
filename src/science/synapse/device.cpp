@@ -7,15 +7,15 @@ Device::Device(const std::string& uri)
     channel_(grpc::CreateChannel(uri, grpc::InsecureChannelCredentials())),
     rpc_(synapse::SynapseDevice::NewStub(channel_)) {}
 
-auto Device::configure(Config* config, std::optional<std::chrono::milliseconds> deadline) -> science::Status {
+auto Device::configure(Config* config, std::optional<std::chrono::milliseconds> timeout) -> science::Status {
   auto s = config->set_device(this);
   if (!s.ok()) {
     return { s.code(), "failed to set device: " + s.message() };
   }
 
   grpc::ClientContext context;
-  if (deadline) {
-    context.set_deadline(std::chrono::system_clock::now() + *deadline);
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
   }
 
   synapse::DeviceConfiguration req = config->to_proto();
@@ -46,10 +46,10 @@ auto Device::configure(Config* config, std::optional<std::chrono::milliseconds> 
   return status;
 }
 
-auto Device::info(synapse::DeviceInfo* info, std::optional<std::chrono::milliseconds> deadline) -> science::Status {
+auto Device::info(synapse::DeviceInfo* info, std::optional<std::chrono::milliseconds> timeout) -> science::Status {
   grpc::ClientContext context;
-  if (deadline) {
-    context.set_deadline(std::chrono::system_clock::now() + *deadline);
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
   }
 
   google::protobuf::Empty req;
@@ -83,10 +83,10 @@ auto Device::info(synapse::DeviceInfo* info, std::optional<std::chrono::millisec
   return status;
 }
 
-auto Device::start(std::optional<std::chrono::milliseconds> deadline) -> science::Status {
+auto Device::start(std::optional<std::chrono::milliseconds> timeout) -> science::Status {
   grpc::ClientContext context;
-  if (deadline) {
-    context.set_deadline(std::chrono::system_clock::now() + *deadline);
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
   }
 
   google::protobuf::Empty req;
@@ -117,10 +117,10 @@ auto Device::start(std::optional<std::chrono::milliseconds> deadline) -> science
   return status;
 }
 
-auto Device::stop(std::optional<std::chrono::milliseconds> deadline) -> science::Status {
+auto Device::stop(std::optional<std::chrono::milliseconds> timeout) -> science::Status {
   grpc::ClientContext context;
-  if (deadline) {
-    context.set_deadline(std::chrono::system_clock::now() + *deadline);
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
   }
 
   google::protobuf::Empty req;

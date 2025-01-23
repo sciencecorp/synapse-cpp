@@ -27,19 +27,19 @@ class Device {
   /**
    * @see synapse::SynapseDevice::Stub#Configure
    */
-  [[nodiscard]] auto configure(Config* config, std::optional<std::chrono::milliseconds> deadline = std::nullopt) -> science::Status;
+  [[nodiscard]] auto configure(Config* config, std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status;
   /**
    * @see synapse::SynapseDevice::Stub#info
    */
-  [[nodiscard]] auto info(synapse::DeviceInfo* info, std::optional<std::chrono::milliseconds> deadline = std::nullopt) -> science::Status;
+  [[nodiscard]] auto info(synapse::DeviceInfo* info, std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status;
   /**
    * @see synapse::SynapseDevice::Stub#start
    */
-  [[nodiscard]] auto start(std::optional<std::chrono::milliseconds> deadline = std::nullopt) -> science::Status;
+  [[nodiscard]] auto start(std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status;
   /**
    * @see synapse::SynapseDevice::Stub#start
    */
-  [[nodiscard]] auto stop(std::optional<std::chrono::milliseconds> deadline = std::nullopt) -> science::Status;
+  [[nodiscard]] auto stop(std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status;
 
   /**
    * List the node sockets configured on the device. 
