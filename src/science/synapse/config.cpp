@@ -53,7 +53,7 @@ auto Config::add(std::vector<std::shared_ptr<Node>> nodes) -> science::Status {
   return s;
 }
 
-auto Config::add_node(std::shared_ptr<Node> node, uint64_t id) -> science::Status {
+auto Config::add_node(std::shared_ptr<Node> node, uint32_t id) -> science::Status {
   if (node->id()) {
     return { science::StatusCode::kInvalidArgument, "node already has an id" };
   }
@@ -113,7 +113,7 @@ auto Config::connect(std::weak_ptr<Node> src, std::weak_ptr<Node> dst) -> scienc
   return {};
 }
 
-auto Config::gen_node_id() -> uint64_t {
+auto Config::gen_node_id() -> uint32_t {
   return nodes_.size() + 1;
 }
 
