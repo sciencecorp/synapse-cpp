@@ -37,9 +37,10 @@ class Config {
    * The node will be assigned an ID.
    *
    * @param node A node configuration to add
+   * @param id The ID to assign to the node. If 0, a new ID will be generated.
    * @return science::Status
    */
-  [[nodiscard]] auto add_node(std::shared_ptr<Node> node) -> science::Status;
+  [[nodiscard]] auto add_node(std::shared_ptr<Node> node, uint32_t id = 0) -> science::Status;
 
   /**
    * Connect the output of one node to the input of another.
@@ -54,9 +55,9 @@ class Config {
   /**
    * Get the connections in the configuration.
    *
-   * @return const std::vector<std::pair<uint64_t, uint64_t>>&
+   * @return const std::vector<std::pair<uint32_t, uint32_t>>&
    */
-  [[nodiscard]] auto connections() const -> const std::vector<std::pair<uint64_t, uint64_t>>&;
+  [[nodiscard]] auto connections() const -> const std::vector<std::pair<uint32_t, uint32_t>>&;
 
   /**
    * Get the nodes in the configuration.
@@ -94,9 +95,9 @@ class Config {
 
  private:
   std::vector<std::shared_ptr<Node>> nodes_;
-  std::vector<std::pair<uint64_t, uint64_t>> connections_;
+  std::vector<std::pair<uint32_t, uint32_t>> connections_;
 
-  [[nodiscard]] auto gen_node_id() -> uint64_t;
+  [[nodiscard]] auto gen_node_id() -> uint32_t;
 };
 
 }  // namespace synapse

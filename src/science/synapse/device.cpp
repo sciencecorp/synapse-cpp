@@ -7,13 +7,16 @@ Device::Device(const std::string& uri)
     channel_(grpc::CreateChannel(uri, grpc::InsecureChannelCredentials())),
     rpc_(synapse::SynapseDevice::NewStub(channel_)) {}
 
-auto Device::configure(Config* config) -> science::Status {
+auto Device::configure(Config* config, std::optional<std::chrono::milliseconds> timeout) -> science::Status {
   auto s = config->set_device(this);
   if (!s.ok()) {
     return { s.code(), "failed to set device: " + s.message() };
   }
 
   grpc::ClientContext context;
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
+  }
 
   synapse::DeviceConfiguration req = config->to_proto();
   synapse::Status res;
@@ -43,8 +46,11 @@ auto Device::configure(Config* config) -> science::Status {
   return status;
 }
 
-auto Device::info(synapse::DeviceInfo* info) -> science::Status {
+auto Device::info(synapse::DeviceInfo* info, std::optional<std::chrono::milliseconds> timeout) -> science::Status {
   grpc::ClientContext context;
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
+  }
 
   google::protobuf::Empty req;
   synapse::DeviceInfo res;
@@ -77,8 +83,11 @@ auto Device::info(synapse::DeviceInfo* info) -> science::Status {
   return status;
 }
 
-auto Device::start() -> science::Status {
+auto Device::start(std::optional<std::chrono::milliseconds> timeout) -> science::Status {
   grpc::ClientContext context;
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
+  }
 
   google::protobuf::Empty req;
   synapse::Status res;
@@ -108,8 +117,11 @@ auto Device::start() -> science::Status {
   return status;
 }
 
-auto Device::stop() -> science::Status {
+auto Device::stop(std::optional<std::chrono::milliseconds> timeout) -> science::Status {
   grpc::ClientContext context;
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
+  }
 
   google::protobuf::Empty req;
   synapse::Status res;

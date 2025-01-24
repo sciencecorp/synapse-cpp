@@ -53,12 +53,22 @@ auto Config::add(std::vector<std::shared_ptr<Node>> nodes) -> science::Status {
   return s;
 }
 
-auto Config::add_node(std::shared_ptr<Node> node) -> science::Status {
+auto Config::add_node(std::shared_ptr<Node> node, uint32_t id) -> science::Status {
   if (node->id()) {
     return { science::StatusCode::kInvalidArgument, "node already has an id" };
   }
 
-  node->id_ = gen_node_id();
+  if (id == 0) {
+    id = gen_node_id();
+  }
+
+  for (auto& n : nodes_) {
+    if (n->id() == id) {
+      return { science::StatusCode::kInvalidArgument, "id already in use" };
+    }
+  }
+
+  node->id_ = id;
   nodes_.push_back(node);
   return {};
 }
@@ -103,7 +113,7 @@ auto Config::connect(std::weak_ptr<Node> src, std::weak_ptr<Node> dst) -> scienc
   return {};
 }
 
-auto Config::gen_node_id() -> uint64_t {
+auto Config::gen_node_id() -> uint32_t {
   return nodes_.size() + 1;
 }
 
@@ -146,13 +156,9 @@ auto Config::from_proto(const synapse::DeviceConfiguration& proto, Config* confi
     }
 
     if (!node_ptr->id()) {
-      s = config->add_node(node_ptr);
-      if (!s.ok()) {
-        return s;
-      }
-    } else {
-      config->nodes_.push_back(node_ptr);
+      node_ptr->id_ = node_config.id();
     }
+    config->nodes_.push_back(node_ptr);
   }
 
   for (const auto& connection : proto.connections()) {

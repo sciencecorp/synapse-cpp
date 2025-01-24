@@ -22,12 +22,12 @@ class Node {
   explicit Node(const synapse::NodeType& node_type);
   virtual ~Node() = default;
 
-  [[nodiscard]] auto id() const -> uint64_t;
+  [[nodiscard]] auto id() const -> uint32_t;
   [[nodiscard]] auto set_device(const Device* device) -> science::Status;
   auto to_proto(synapse::NodeConfig* proto) -> void;
 
  protected:
-  uint64_t id_;
+  uint32_t id_;
   synapse::NodeType type_;
   const Device* device_;
 
