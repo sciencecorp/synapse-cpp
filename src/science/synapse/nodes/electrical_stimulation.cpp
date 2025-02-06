@@ -41,18 +41,23 @@ auto ElectricalStimulation::from_proto(const synapse::NodeConfig& proto, std::sh
   return {};
 }
 
-auto ElectricalStimulation::p_to_proto(synapse::NodeConfig* proto) -> void {
+auto ElectricalStimulation::p_to_proto(synapse::NodeConfig* proto) -> science::Status {
+  if (proto == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "proto ptr must not be null" };
+  }
+
   synapse::ElectricalStimulationConfig* config = proto->mutable_electrical_stimulation();
 
   for (const auto& channel : channels_) {
     channel.to_proto(config->add_channels());
   }
 
-
   config->set_peripheral_id(peripheral_id_);
   config->set_bit_width(bit_width_);
   config->set_sample_rate(sample_rate_);
   config->set_lsb(lsb_);
+
+  return {};
 }
 
 }  // namespace synapse

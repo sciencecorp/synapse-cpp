@@ -23,7 +23,7 @@ class StreamIn : public UdpNode {
   ) -> science::Status;
 
  protected:
-  auto p_to_proto(synapse::NodeConfig* proto) -> void override;
+  auto p_to_proto(synapse::NodeConfig* proto) -> science::Status override;
 
  private:
   const synapse::DataType data_type_;

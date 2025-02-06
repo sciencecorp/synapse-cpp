@@ -160,11 +160,17 @@ auto StreamOut::read(SynapseData* data) -> science::Status {
   return unpack(buf, data);
 }
 
-auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> void {
+auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> science::Status {
+  if (proto == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "proto ptr must not be null" };
+  }
+
   synapse::StreamOutConfig* config = proto->mutable_stream_out();
 
   config->set_label(label_);
   config->set_multicast_group(multicast_group_);
+
+  return {};
 }
 
 }  // namespace synapse

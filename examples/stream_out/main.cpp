@@ -4,12 +4,12 @@
 #include "science/synapse/channel.h"
 #include "science/synapse/data.h"
 #include "science/synapse/device.h"
-#include "science/synapse/nodes/electrical_broadband.h"
+#include "science/synapse/nodes/broadband_source.h"
 #include "science/synapse/nodes/stream_out.h"
 
 using synapse::BinnedSpiketrainData;
 using synapse::Ch;
-using synapse::ElectricalBroadbandData;
+using synapse::BroadbandSourceData;
 using synapse::SynapseData;
 
 auto stream(const std::string& uri, const std::string& group, bool configure) -> int {
@@ -36,11 +36,11 @@ auto stream(const std::string& uri, const std::string& group, bool configure) ->
         .reference_id = i * 2 + 1,
       });
     }
-    auto electrical_broadband = std::make_shared<synapse::ElectricalBroadband>(
+    auto broadband_source = std::make_shared<synapse::BroadbandSource>(
         1, channels, 16, 30000, 20.0, 500, 6000);
     s = config.add_node(stream_out);
-    s = config.add_node(electrical_broadband);
-    s = config.connect(electrical_broadband, stream_out);
+    s = config.add_node(broadband_source);
+    s = config.connect(broadband_source, stream_out);
 
     s = device.configure(&config);
 
@@ -63,8 +63,8 @@ auto stream(const std::string& uri, const std::string& group, bool configure) ->
       continue;
     }
 
-    if (std::holds_alternative<ElectricalBroadbandData>(out)) {
-      auto data = std::get<ElectricalBroadbandData>(out);
+    if (std::holds_alternative<BroadbandSourceData>(out)) {
+      auto data = std::get<BroadbandSourceData>(out);
       std::cout << "recv electrical broadband data" << std::endl;
       std::cout << "  - t0: " << data.t0 << std::endl;
       std::cout << "  - bit_width: " << data.bit_width << std::endl;
