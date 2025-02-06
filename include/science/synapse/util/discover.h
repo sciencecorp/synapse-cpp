@@ -21,4 +21,7 @@ namespace synapse {
 auto discover(unsigned int timeout_ms = 3000,
               std::vector<DeviceAdvertisement>* discovered = nullptr) -> science::Status;
 
+auto parse(const std::string& host,
+           const std::vector<std::string>& payload,
+           DeviceAdvertisement* parsed) -> science::Status;
 }
