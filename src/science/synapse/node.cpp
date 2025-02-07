@@ -2,7 +2,7 @@
 
 namespace synapse {
 
-Node::Node(const NodeType& type) : type_(type) {}
+Node::Node(const NodeType& type) : id_(0), type_(type) {}
 
 auto Node::id() const -> uint32_t {
   return id_;

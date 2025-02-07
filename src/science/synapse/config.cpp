@@ -53,6 +53,9 @@ auto create_node(const synapse::NodeConfig& config, std::shared_ptr<Node>* node_
 auto Config::add(std::vector<std::shared_ptr<Node>> nodes) -> science::Status {
   science::Status s;
   for (auto& node : nodes) {
+    if (node.get() == nullptr) {
+      return { science::StatusCode::kInvalidArgument, "node must not be null" };
+    }
     s = add_node(node);
     if (!s.ok()) {
       return s;
@@ -62,6 +65,10 @@ auto Config::add(std::vector<std::shared_ptr<Node>> nodes) -> science::Status {
 }
 
 auto Config::add_node(std::shared_ptr<Node> node, uint32_t id) -> science::Status {
+  if (node.get() == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "node must not be null" };
+  }
+
   if (node->id()) {
     return { science::StatusCode::kInvalidArgument, "node already has an id" };
   }

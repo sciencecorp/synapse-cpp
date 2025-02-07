@@ -9,53 +9,139 @@
 
 using synapse::BinnedSpiketrainData;
 using synapse::Ch;
-using synapse::BroadbandSourceData;
+using synapse::Config;
+using synapse::Device;
+using synapse::DeviceInfo;
+using synapse::Electrodes;
+using synapse::ElectricalBroadbandData;
+using synapse::NodeType;
+using synapse::Signal;
+using synapse::StreamOut;
 using synapse::SynapseData;
 
-auto stream(const std::string& uri, const std::string& group, bool configure) -> int {
-  synapse::Device device(uri);
-  synapse::Config config;
+
+auto stream_new(Device& device, std::shared_ptr<StreamOut>* stream_out_ptr) -> science::Status {
+  if (stream_out_ptr == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "stream out pointer is null" };
+  }
+
+  std::string group = "239.0.0.123";
+  science::Status s;
+  DeviceInfo info;
+  s = device.info(&info);
+  if (!s.ok()) return s;
+
+  Signal signal{
+    Electrodes{
+      .channels = {},
+      .low_cutoff_hz = 500,
+      .high_cutoff_hz = 6000
+    }
+  };
+  auto& electrodes = std::get<Electrodes>(signal.signal);
+  electrodes.channels.reserve(19);
+  for (unsigned int i = 0; i < 19; i++) {
+    electrodes.channels.push_back(Ch{
+      .id = i,
+      .electrode_id = i * 2,
+      .reference_id = i * 2 + 1
+    });
+  }
+
+  Config config;
+  auto broadband_source = std::make_shared<synapse::BroadbandSource>(1, 16, 30000, 20.0, signal);
+  *stream_out_ptr = std::make_shared<synapse::StreamOut>("out", group);
+
+  s = config.add_node(broadband_source);
+  if (!s.ok()) return s;
+
+  s = config.add_node(*stream_out_ptr);
+  if (!s.ok()) return s;
+  
+  s = config.connect(broadband_source, *stream_out_ptr);
+  if (!s.ok()) return s;
+
+  s = device.configure(&config);
+  if (!s.ok()) return s;
+
+  s = device.start();
+
+  return s;
+}
+
+auto stream_existing(Device& device, std::shared_ptr<StreamOut>* stream_out_ptr) -> science::Status {
+  if (stream_out_ptr == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "stream out pointer is null" };
+  }
+
   science::Status s;
 
-  synapse::DeviceInfo info;
+  DeviceInfo info;
   s = device.info(&info);
-  if (!s.ok()) {
-    std::cout << "error getting device info: (" << static_cast<int>(s.code()) << ") " << s.message() << std::endl;
-    return 1;
+  if (!s.ok()) return s;
+
+  uint32_t stream_out_id = 0; // default id
+  std::string group;
+  const auto& nodes = info.configuration().nodes();
+  for (const auto& node : nodes) {
+    if (node.type() == NodeType::kStreamOut) {
+      stream_out_id = node.id();
+      group = node.stream_out().multicast_group();
+      break;
+    }
   }
-  std::cout << "device info: " << info.DebugString() << std::endl;
+
+  if (stream_out_id == 0) {
+    return { science::StatusCode::kNotFound, "no stream out node found" };
+  }
+
+  std::cout << "found stream out node with id " << stream_out_id << " and group " << group << std::endl;
+
+  *stream_out_ptr = std::make_shared<synapse::StreamOut>("out", group);
+
+  Config config;
+  s = config.add_node(*stream_out_ptr, stream_out_id);
+  if (!s.ok()) return s;
+
+  s = config.set_device(&device);
+  if (!s.ok()) return s;
+
+  return s;
+} 
+
+auto stream(const std::string& uri, bool configure) -> int {
+  synapse::Device device(uri);
+  science::Status s;
 
   std::shared_ptr<synapse::StreamOut> stream_out;
   if (configure) {
-    // Configure the device to stream out electrical broadband data
-    std::vector<synapse::Ch> channels;
-    for (unsigned int i = 0; i < 19; i++) {
-      channels.push_back(synapse::Ch{
-        .id = i,
-        .electrode_id = i * 2,
-        .reference_id = i * 2 + 1,
-      });
+    s = stream_new(device, &stream_out);
+    if (!s.ok()) {
+      std::cout << "error configuring stream out node: ("
+        << static_cast<int>(s.code()) << ") " << s.message() << std::endl;
+      return 1;
     }
-    auto broadband_source = std::make_shared<synapse::BroadbandSource>(
-        1, channels, 16, 30000, 20.0, 500, 6000);
-    s = config.add_node(stream_out);
-    s = config.add_node(broadband_source);
-    s = config.connect(broadband_source, stream_out);
-
-    s = device.configure(&config);
-
-    s = device.start();
 
   } else {
-    // Read data from a device that is already configured
-    stream_out = std::make_shared<synapse::StreamOut>("out", group);
-    s = config.add_node(stream_out);
-    s = config.set_device(&device);
+    s = stream_existing(device, &stream_out);
+    if (!s.ok()) {
+      std::cout << "error getting existing stream out node: ("
+        << static_cast<int>(s.code()) << ") " << s.message() << std::endl;
+      return 1;
+    }
+  }
+
+  if (stream_out == nullptr) {
+    std::cout << "stream out node not initialized" << std::endl;
+    return 1;
   }
 
   while (true) {
     SynapseData out;
     s = stream_out->read(&out);
+    if (s.code() == science::StatusCode::kUnavailable) {
+      continue;
+    }
 
     if (!s.ok()) {
       std::cout << "error reading from stream out node: ("
@@ -63,8 +149,8 @@ auto stream(const std::string& uri, const std::string& group, bool configure) ->
       continue;
     }
 
-    if (std::holds_alternative<BroadbandSourceData>(out)) {
-      auto data = std::get<BroadbandSourceData>(out);
+    if (std::holds_alternative<ElectricalBroadbandData>(out)) {
+      auto data = std::get<ElectricalBroadbandData>(out);
       std::cout << "recv electrical broadband data" << std::endl;
       std::cout << "  - t0: " << data.t0 << std::endl;
       std::cout << "  - bit_width: " << data.bit_width << std::endl;
@@ -108,8 +194,7 @@ auto stream(const std::string& uri, const std::string& group, bool configure) ->
 
 int main(int argc, char** argv) {
   std::string uri = "192.168.0.1:647";
-  std::string group = "239.0.0.1";
-  stream(uri, group, false);
+  stream(uri, false);
 
   return 0;
 }
