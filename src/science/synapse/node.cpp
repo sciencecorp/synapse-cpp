@@ -18,7 +18,7 @@ auto Node::set_device(const Device* device) -> science::Status {
 
 auto Node::to_proto(synapse::NodeConfig* proto) -> science::Status {
   if (proto == nullptr) {
-    return { science::StatusCode::kInvalidArgument, "proto ptr mmust not be null" };
+    return { science::StatusCode::kInvalidArgument, "proto ptr must not be null" };
   }
   proto->set_id(id_);
   proto->set_type(type_);
