@@ -21,7 +21,7 @@ class SpectralFilter : public Node {
 
 
  protected:
-  auto p_to_proto(synapse::NodeConfig* proto) -> void override;
+  auto p_to_proto(synapse::NodeConfig* proto) -> science::Status override;
 
  private:
   synapse::SpectralFilterMethod method_;

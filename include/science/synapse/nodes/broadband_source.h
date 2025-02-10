@@ -1,20 +1,22 @@
 #pragma once
 
 #include <memory>
-#include "science/synapse/api/nodes/optical_broadband.pb.h"
-#include "science/synapse/channel_mask.h"
+#include <variant>
+#include <vector>
+#include "science/synapse/api/nodes/broadband_source.pb.h"
+#include "science/synapse/signal_config.h"
 #include "science/synapse/node.h"
 
 namespace synapse {
 
-class OpticalBroadband : public Node {
+class BroadbandSource : public Node {
  public:
-  explicit OpticalBroadband(
+  explicit BroadbandSource(
     uint32_t peripheral_id,
-    std::optional<ChannelMask> pixel_mask,
     uint32_t bit_width,
-    uint32_t frame_rate,
-    uint32_t gain
+    uint32_t sample_rate_hz,
+    float gain,
+    const Signal& signal
   );
 
   [[nodiscard]] static auto from_proto(
@@ -24,14 +26,14 @@ class OpticalBroadband : public Node {
 
 
  protected:
-  auto p_to_proto(synapse::NodeConfig* proto) -> void override;
+  auto p_to_proto(synapse::NodeConfig* proto) -> science::Status override;
 
  private:
   uint32_t peripheral_id_;
-  std::optional<ChannelMask> pixel_mask_;
   uint32_t bit_width_;
-  uint32_t frame_rate_;
+  uint32_t sample_rate_hz_;
   uint32_t gain_;
+  Signal signal_;
 };
 
 }  // namespace synapse

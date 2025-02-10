@@ -38,13 +38,19 @@ auto StreamIn::write(const std::vector<std::byte>& in) -> science::Status {
   return {};
 }
 
-auto StreamIn::p_to_proto(synapse::NodeConfig* proto) -> void {
+auto StreamIn::p_to_proto(synapse::NodeConfig* proto) -> science::Status {
+  if (proto == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "proto ptr must not be null" };
+  }
+
   synapse::StreamInConfig* config = proto->mutable_stream_in();
 
   config->set_data_type(data_type_);
   for (const auto& dim : shape_) {
     config->add_shape(dim);
   }
+
+  return {};
 }
 
 }  // namespace synapse

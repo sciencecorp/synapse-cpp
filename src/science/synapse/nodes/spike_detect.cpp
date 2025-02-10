@@ -34,7 +34,11 @@ auto SpikeDetect::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<N
   return {};
 }
 
-auto SpikeDetect::p_to_proto(synapse::NodeConfig* proto) -> void {
+auto SpikeDetect::p_to_proto(synapse::NodeConfig* proto) -> science::Status {
+  if (proto == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "proto ptr must not be null" };
+  }
+
   synapse::SpikeDetectConfig* config = proto->mutable_spike_detect();
 
   const auto& temp = template_uv_.channels();
@@ -49,6 +53,8 @@ auto SpikeDetect::p_to_proto(synapse::NodeConfig* proto) -> void {
   config->set_threshold_uv(threshold_uv_);
   config->set_sort(sort_);
   config->set_bin_size_ms(bin_size_ms_);
+
+  return {};
 }
 
 }  // namespace synapse

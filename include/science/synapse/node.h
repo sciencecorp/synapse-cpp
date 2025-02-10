@@ -24,14 +24,14 @@ class Node {
 
   [[nodiscard]] auto id() const -> uint32_t;
   [[nodiscard]] auto set_device(const Device* device) -> science::Status;
-  auto to_proto(synapse::NodeConfig* proto) -> void;
+  [[nodiscard]] auto to_proto(synapse::NodeConfig* proto) -> science::Status;
 
  protected:
   uint32_t id_;
   synapse::NodeType type_;
   const Device* device_;
 
-  virtual auto p_to_proto(synapse::NodeConfig* proto) -> void = 0;
+  virtual auto p_to_proto(synapse::NodeConfig* proto) -> science::Status = 0;
 
   friend class Config;
 };

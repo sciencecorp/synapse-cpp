@@ -1,9 +1,9 @@
 #include "science/synapse/config.h"
-#include "science/synapse/nodes/electrical_broadband.h"
+#include "science/synapse/nodes/broadband_source.h"
 #include "science/synapse/nodes/electrical_stimulation.h"
-#include "science/synapse/nodes/optical_broadband.h"
 #include "science/synapse/nodes/optical_stimulation.h"
 #include "science/synapse/nodes/spike_detect.h"
+#include "science/synapse/nodes/spike_source.h"
 #include "science/synapse/nodes/spectral_filter.h"
 #include "science/synapse/nodes/stream_in.h"
 #include "science/synapse/nodes/stream_out.h"
@@ -12,21 +12,29 @@
 namespace synapse {
 
 auto create_node(const synapse::NodeConfig& config, std::shared_ptr<Node>* node_ptr) -> science::Status {
+  if (node_ptr == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "node ptr must not be null" };
+  }
+
+  if (config.type() == synapse::NodeType::kNodeTypeUnknown) {
+    return { science::StatusCode::kInvalidArgument, "unknown node type" };
+  }
+
   switch (config.type()) {
-    case synapse::NodeType::kElectricalBroadband:
-      return ElectricalBroadband::from_proto(config, node_ptr);
+    case synapse::NodeType::kBroadbandSource:
+      return BroadbandSource::from_proto(config, node_ptr);
 
     case synapse::NodeType::kElectricalStimulation:
       return ElectricalStimulation::from_proto(config, node_ptr);
 
-    case synapse::NodeType::kOpticalBroadband:
-      return OpticalBroadband::from_proto(config, node_ptr);
-
-    case synapse::NodeType::kOpticalStimulation:lation:
+    case synapse::NodeType::kOpticalStimulation:
       return OpticalStimulation::from_proto(config, node_ptr);
 
     case synapse::NodeType::kSpikeDetect:
       return SpikeDetect::from_proto(config, node_ptr);
+
+    case synapse::NodeType::kSpikeSource:
+      return SpikeSource::from_proto(config, node_ptr);
 
     case synapse::NodeType::kSpectralFilter:
       return SpectralFilter::from_proto(config, node_ptr);
@@ -45,6 +53,9 @@ auto create_node(const synapse::NodeConfig& config, std::shared_ptr<Node>* node_
 auto Config::add(std::vector<std::shared_ptr<Node>> nodes) -> science::Status {
   science::Status s;
   for (auto& node : nodes) {
+    if (node.get() == nullptr) {
+      return { science::StatusCode::kInvalidArgument, "node must not be null" };
+    }
     s = add_node(node);
     if (!s.ok()) {
       return s;
@@ -54,6 +65,10 @@ auto Config::add(std::vector<std::shared_ptr<Node>> nodes) -> science::Status {
 }
 
 auto Config::add_node(std::shared_ptr<Node> node, uint32_t id) -> science::Status {
+  if (node.get() == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "node must not be null" };
+  }
+
   if (node->id()) {
     return { science::StatusCode::kInvalidArgument, "node already has an id" };
   }

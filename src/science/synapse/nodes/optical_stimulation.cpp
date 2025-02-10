@@ -38,7 +38,11 @@ auto OpticalStimulation::from_proto(const synapse::NodeConfig& proto, std::share
   return {};
 }
 
-auto OpticalStimulation::p_to_proto(synapse::NodeConfig* proto) -> void {
+auto OpticalStimulation::p_to_proto(synapse::NodeConfig* proto) -> science::Status {
+  if (proto == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "proto ptr must not be null" };
+  }
+
   synapse::OpticalStimulationConfig* config = proto->mutable_optical_stimulation();
 
   if (pixel_mask_.has_value()) {
@@ -52,6 +56,8 @@ auto OpticalStimulation::p_to_proto(synapse::NodeConfig* proto) -> void {
   config->set_bit_width(bit_width_);
   config->set_frame_rate(frame_rate_);
   config->set_gain(gain_);
+
+  return {};
 }
 
 }  // namespace synapse

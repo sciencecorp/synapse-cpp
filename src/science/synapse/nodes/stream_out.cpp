@@ -99,13 +99,11 @@ auto StreamOut::init() -> science::Status {
 
   auto saddr = addr().value();
 
-  std::cout << "binding to " << inet_ntoa(saddr.sin_addr) << ":" << ntohs(saddr.sin_port) << std::endl;
   rc = bind(sock(), reinterpret_cast<sockaddr*>(&saddr), sizeof(saddr));
   if (rc < 0) {
     return { science::StatusCode::kInternal, "error binding socket (code: " + std::to_string(rc) + ")" };
   }
 
-  std::cout << "joining multicast group " << multicast_group_ << std::endl;
   ip_mreq mreq;
   mreq.imr_multiaddr.s_addr = inet_addr(multicast_group_.c_str());
   mreq.imr_interface.s_addr = htonl(INADDR_ANY);
@@ -160,11 +158,17 @@ auto StreamOut::read(SynapseData* data) -> science::Status {
   return unpack(buf, data);
 }
 
-auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> void {
+auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> science::Status {
+  if (proto == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "proto ptr must not be null" };
+  }
+
   synapse::StreamOutConfig* config = proto->mutable_stream_out();
 
   config->set_label(label_);
   config->set_multicast_group(multicast_group_);
+
+  return {};
 }
 
 }  // namespace synapse

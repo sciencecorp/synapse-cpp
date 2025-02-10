@@ -23,7 +23,7 @@ class OpticalStimulation : public Node {
   ) -> science::Status;
 
  protected:
-  auto p_to_proto(synapse::NodeConfig* proto) -> void override;
+  auto p_to_proto(synapse::NodeConfig* proto) -> science::Status override;
 
  private:
   uint32_t peripheral_id_;

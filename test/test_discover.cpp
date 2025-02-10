@@ -1,13 +1,9 @@
 
 #include <gtest/gtest.h>
 #include <science/scipp/status.h>
-#include <science/synapse/device_advertisement.h>
+#include <science/synapse/util/discover.h>
 
-namespace synapse {
-
-extern auto parse(const std::string& host,
-                 const std::vector<std::string>& payload,
-                 DeviceAdvertisement* parsed) -> science::Status;
+using synapse::DeviceAdvertisement;
 
 TEST(DiscoverTest, ParseValidMessage) {
   DeviceAdvertisement parsed;
@@ -76,5 +72,3 @@ TEST(DiscoverTest, ParseTooFewElements) {
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(status.code(), science::StatusCode::kInvalidArgument);
 }
-
-}  // namespace synapse

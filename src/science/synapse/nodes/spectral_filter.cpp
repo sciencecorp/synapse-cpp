@@ -27,12 +27,18 @@ auto SpectralFilter::from_proto(const synapse::NodeConfig& proto, std::shared_pt
   return {};
 }
 
-auto SpectralFilter::p_to_proto(synapse::NodeConfig* proto) -> void {
+auto SpectralFilter::p_to_proto(synapse::NodeConfig* proto) -> science::Status {
+  if (proto == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "proto ptr must not be null" };
+  }
+
   synapse::SpectralFilterConfig* config = proto->mutable_spectral_filter();
 
   config->set_method(method_);
   config->set_low_cutoff_hz(low_cutoff_hz_);
   config->set_high_cutoff_hz(high_cutoff_hz_);
+
+  return {};
 }
 
 }  // namespace synapse

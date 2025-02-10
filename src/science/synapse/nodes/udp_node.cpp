@@ -31,6 +31,10 @@ auto UdpNode::addr() const -> std::optional<sockaddr_in> {
 }
 
 auto UdpNode::get_host(std::string* host) -> science::Status {
+  if (host == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "host ptr must not be null" };
+  }
+
   if (device_ == nullptr) {
     return { science::StatusCode::kFailedPrecondition, "device not set, has Device been configured?" };
   }
@@ -45,6 +49,10 @@ auto UdpNode::get_host(std::string* host) -> science::Status {
 }
 
 auto UdpNode::get_port(uint16_t* port) -> science::Status {
+  if (port == nullptr) {
+    return { science::StatusCode::kInvalidArgument, "port ptr must not be null" };
+  }
+
   if (device_ == nullptr) {
     return { science::StatusCode::kFailedPrecondition, "device not set, has Device been configured?" };
   }
