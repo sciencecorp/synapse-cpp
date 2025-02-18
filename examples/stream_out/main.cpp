@@ -25,7 +25,7 @@ auto stream_new(Device& device, std::shared_ptr<StreamOut>* stream_out_ptr) -> s
     return { science::StatusCode::kInvalidArgument, "stream out pointer is null" };
   }
 
-  std::string group = "239.0.0.123";
+  std::string group = "224.0.0.10";
   science::Status s;
   DeviceInfo info;
   s = device.info(&info);
