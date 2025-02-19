@@ -8,7 +8,7 @@ auto Node::id() const -> uint32_t {
   return id_;
 }
 
-auto Node::set_device(const Device* device) -> science::Status {
+auto Node::set_device(const IDevice* device) -> science::Status {
   if (device == nullptr) {
     return { science::StatusCode::kInvalidArgument, "device ptr must not be null" };
   }
