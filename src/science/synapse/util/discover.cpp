@@ -83,8 +83,27 @@ auto discover(unsigned int timeout_ms,
     return { StatusCode::kInternal, "error creating socket (code: " + std::to_string(sock) + ")" };
   }
 
+  int reuse = 1;
+  auto rc = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+  if (rc < 0) {
+    return {
+      StatusCode::kInternal,
+      "error configuring SO_REUSEADDR (code: " + std::to_string(rc) + ")"
+    };
+  }
+
+  #ifdef SO_REUSEPORT
+  rc = setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
+  if (rc < 0) {
+    return {
+      StatusCode::kInternal,
+      "error configuring SO_REUSEPORT (code: " + std::to_string(rc) + ")"
+    };
+  }
+  #endif
+
   int ttl = 3;
-  auto rc = setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl));
+  rc = setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl));
   if (rc < 0) {
     return {
       StatusCode::kInternal,

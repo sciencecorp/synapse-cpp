@@ -11,7 +11,7 @@
 
 namespace synapse {
 
-class Device;
+class IDevice;
 
 /**
  * Configuration for a Synapse device.
@@ -72,7 +72,7 @@ class Config {
    * @param device 
    * @return science::Status 
    */
-  [[nodiscard]] auto set_device(const Device* device) -> science::Status;
+  [[nodiscard]] auto set_device(const IDevice* device) -> science::Status;
 
   /**
    * Convert the configuration to its corresponding DeviceConfiguration proto message.
@@ -91,7 +91,7 @@ class Config {
   [[nodiscard]] static auto from_proto(const synapse::DeviceConfiguration& proto, Config* config) -> science::Status;
 
  protected:
-  friend class Device;
+  friend class IDevice;
 
  private:
   std::vector<std::shared_ptr<Node>> nodes_;
