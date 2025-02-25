@@ -106,6 +106,19 @@ auto UdpNode::init() -> science::Status {
     return { science::StatusCode::kInternal, "error creating socket (code: " + std::to_string(socket_) + ")" };
   }
 
+  int reuse = 1;
+  auto rc = setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+  if (rc < 0) {
+    return { science::StatusCode::kInternal, "error configuring SO_REUSEADDR (code: " + std::to_string(rc) + ")" };
+  }
+
+  #ifdef SO_REUSEPORT
+  rc = setsockopt(socket_, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
+  if (rc < 0) {
+    return { science::StatusCode::kInternal, "error configuring SO_REUSEPORT (code: " + std::to_string(rc) + ")" };
+  }
+  #endif
+
   return {};
 }
 

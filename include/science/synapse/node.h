@@ -10,7 +10,7 @@
 
 namespace synapse {
 
-class Device;
+class IDevice;
 
 /**
  * Base Node class.
@@ -23,13 +23,13 @@ class Node {
   virtual ~Node() = default;
 
   [[nodiscard]] auto id() const -> uint32_t;
-  [[nodiscard]] auto set_device(const Device* device) -> science::Status;
+  [[nodiscard]] auto set_device(const IDevice* device) -> science::Status;
   [[nodiscard]] auto to_proto(synapse::NodeConfig* proto) -> science::Status;
 
  protected:
   uint32_t id_;
   synapse::NodeType type_;
-  const Device* device_;
+  const IDevice* device_;
 
   virtual auto p_to_proto(synapse::NodeConfig* proto) -> science::Status = 0;
 

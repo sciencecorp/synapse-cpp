@@ -132,7 +132,7 @@ auto Config::gen_node_id() -> uint32_t {
   return nodes_.size() + 1;
 }
 
-auto Config::set_device(const Device* device) -> science::Status {
+auto Config::set_device(const IDevice* device) -> science::Status {
   if (device == nullptr) {
     return { science::StatusCode::kInvalidArgument, "device must not be null" };
   }
@@ -150,7 +150,7 @@ auto Config::to_proto() -> synapse::DeviceConfiguration {
   synapse::DeviceConfiguration config;
 
   for (auto& node : nodes_) {
-    node->to_proto(config.add_nodes());
+    auto s = node->to_proto(config.add_nodes());
   }
 
   for (auto& [src, dst] : connections_) {

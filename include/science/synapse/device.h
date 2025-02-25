@@ -14,13 +14,24 @@
 
 namespace synapse {
 
+class IDevice {
+ public:
+  virtual ~IDevice() = default;
+  virtual auto configure(Config* config, std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status = 0;
+  virtual auto info(synapse::DeviceInfo* info, std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status = 0;
+  virtual auto start(std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status = 0;
+  virtual auto stop(std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status = 0;
+  virtual auto sockets() const -> const std::vector<synapse::NodeSocket>& = 0;
+  virtual auto uri() const -> const std::string& = 0;
+};
+
 /**
  * A client for a Synapse device.
  * 
  * Use this class to make calls to a Synapse device.
  * The Device must be configured via Config before its signal chain can be run.
  */
-class Device {
+class Device : public IDevice {
  public:
   explicit Device(const std::string& uri);
 
