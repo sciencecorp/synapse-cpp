@@ -58,6 +58,7 @@ auto BroadbandSource::p_to_proto(synapse::NodeConfig* proto) -> science::Status 
   config->set_gain(gain_);
 
   auto s = signal_.to_proto(config->mutable_signal());
+  std::cout << "BroadbandSource::p_to_proto: " << config->DebugString() << std::endl;
 
   return s;
 }

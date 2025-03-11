@@ -18,6 +18,41 @@ using science::libndtp::ElectricalBroadbandData;
 using science::libndtp::NDTPMessage;
 using science::libndtp::SynapseData;
 
+static auto get_client_ip() -> std::string {
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock < 0) {
+    return "";
+  }
+
+  struct sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(80);
+  addr.sin_addr.s_addr = inet_addr("8.8.8.8");
+
+  if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+    close(sock);
+    return "";
+  }
+
+  struct sockaddr_in local_addr;
+  socklen_t len = sizeof(local_addr);
+  if (getsockname(sock, (struct sockaddr*)&local_addr, &len) < 0) {
+    close(sock);
+    return "";
+  }
+
+  close(sock);
+  return inet_ntoa(local_addr.sin_addr);
+}
+
+static auto sockaddr(const std::string& host, uint16_t port) -> sockaddr_in {
+  sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(port);
+  inet_pton(AF_INET, host.c_str(), &addr.sin_addr);
+  return addr;
+}
+
 auto unpack(
   const std::vector<uint8_t>& bytes,
   SynapseData* data,
@@ -28,7 +63,6 @@ auto unpack(
   try {
     msg = NDTPMessage::unpack(bytes);
   } catch (const std::exception& e) {
-    std::cout << "Stream Out | error unpacking NDTP message: " << e.what() << std::endl;
     return { science::StatusCode::kInternal, "error unpacking NDTP message: " + std::string(e.what()) };
   }
 
@@ -53,52 +87,49 @@ auto unpack(
   return {};
 }
 
-StreamOut::StreamOut(const std::string& label, const std::string& multicast_group) : UdpNode(NodeType::kStreamOut),
-    label_(label),
-    multicast_group_(multicast_group) {}
+StreamOut::StreamOut(const std::string& destination_address,
+                    uint16_t destination_port,
+                    const std::string& label)
+    : Node(NodeType::kStreamOut),
+      destination_address_(destination_address.empty() ? get_client_ip() : destination_address),
+      destination_port_(destination_port ? destination_port : DEFAULT_STREAM_OUT_PORT),
+      label_(label) {}
 
-auto StreamOut::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
-  if (!proto.has_stream_out()) {
-    return { science::StatusCode::kInvalidArgument, "missing stream_out config" };
+StreamOut::~StreamOut() {
+  if (socket_ > 0) {
+    close(socket_);
   }
-
-  const auto& config = proto.stream_out();
-  const auto& label = config.label();
-
-  if (config.multicast_group().empty()) {
-    return { science::StatusCode::kInvalidArgument, "multicast_group is required but not set" };
-  }
-  const auto& multicast_group = config.multicast_group();
-
-  *node = std::make_shared<StreamOut>(label, multicast_group);
-  return {};
-}
-
-auto StreamOut::get_host(std::string* host) -> science::Status {
-  if (multicast_group_.empty()) {
-    return { science::StatusCode::kInvalidArgument, "multicast_group required but not set" };
-  }
-  *host = multicast_group_;
-  return {};
 }
 
 auto StreamOut::init() -> science::Status {
-  auto s = UdpNode::init();
-  if (!s.ok()) {
-    return s;
+  socket_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (socket_ < 0) {
+    return { science::StatusCode::kInternal, "error creating socket (code: " + std::to_string(socket_) + ")" };
   }
 
-  int rc = 0;
-  int on = 1;
-  
-  int flags = fcntl(sock(), F_GETFL, 0);
+  // Allow reuse for easy restart
+  int reuse = 1;
+  auto rc = setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+  if (rc < 0) {
+    return { science::StatusCode::kInternal, "error configuring SO_REUSEADDR (code: " + std::to_string(rc) + ")" };
+  }
+
+  #ifdef SO_REUSEPORT
+  rc = setsockopt(socket_, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
+  if (rc < 0) {
+    return { science::StatusCode::kInternal, "error configuring SO_REUSEPORT (code: " + std::to_string(rc) + ")" };
+  }
+  #endif
+
+  // Set non-blocking mode
+  int flags = fcntl(socket_, F_GETFL, 0);
   if (flags < 0) {
     return {
       science::StatusCode::kInternal,
       "error getting socket flags (code: " + std::to_string(flags) + ")"
     };
   }
-  rc = fcntl(sock(), F_SETFL, flags | O_NONBLOCK);
+  rc = fcntl(socket_, F_SETFL, flags | O_NONBLOCK);
   if (rc < 0) {
     return {
       science::StatusCode::kInternal,
@@ -106,47 +137,54 @@ auto StreamOut::init() -> science::Status {
     };
   }
 
-  auto saddr = addr().value();
-
-  rc = bind(sock(), reinterpret_cast<sockaddr*>(&saddr), sizeof(saddr));
+  // Try to set a large recv buffer
+  int bufsize = SOCKET_BUFSIZE_BYTES;
+  rc = setsockopt(socket_, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(bufsize));
   if (rc < 0) {
-    return { science::StatusCode::kInternal, "error binding socket (code: " + std::to_string(rc) + ")" };
+    // continue
   }
 
-  ip_mreq mreq;
-  mreq.imr_multiaddr.s_addr = inet_addr(multicast_group_.c_str());
-  mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+  int actual_bufsize;
+  socklen_t size = sizeof(actual_bufsize);
+  rc = getsockopt(socket_, SOL_SOCKET, SO_RCVBUF, &actual_bufsize, &size);
+  if (rc == 0 && actual_bufsize < SOCKET_BUFSIZE_BYTES) {
+    // continue
+  }
 
-  rc = setsockopt(sock(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
+  addr_ = sockaddr("0.0.0.0", destination_port_);
+  
+  rc = bind(socket_, reinterpret_cast<struct sockaddr*>(&addr_.value()), sizeof(addr_.value()));
   if (rc < 0) {
-    return { science::StatusCode::kInternal, "error joining multicast group (code: " + std::to_string(rc) + ")" };
+    return { science::StatusCode::kInternal, 
+             "error binding socket to 0.0.0.0:" + std::to_string(destination_port_) +
+             " (code: " + std::to_string(rc) + ", errno: " + std::to_string(errno) + ")" };
   }
 
   return {};
 }
 
 auto StreamOut::read(SynapseData* data, science::libndtp::NDTPHeader* header, size_t* bytes_read) -> science::Status {
-  if (!sock() || !addr()) {
+  if (!socket_ || !addr_) {
     auto s = init();
     if (!s.ok()) {
       return { s.code(), "error initializing socket: " + s.message() };
     }
   }
 
-  auto saddr = addr().value();
+  auto saddr = addr_.value();
   socklen_t saddr_len = sizeof(saddr);
 
   fd_set readfds;
   struct timeval tv;
   tv.tv_sec = 0;
-  tv.tv_usec = 1000;
+  tv.tv_usec = 10000;  // Increased timeout to 100ms for debugging
 
   FD_ZERO(&readfds);
-  FD_SET(sock(), &readfds);
-
-  int ready = select(sock() + 1, &readfds, nullptr, nullptr, &tv);
+  FD_SET(socket_, &readfds);
+  
+  int ready = select(socket_ + 1, &readfds, nullptr, nullptr, &tv);
   if (ready < 0) {
-    return { science::StatusCode::kInternal, "error in select (code: " + std::to_string(errno) + ")" };
+    return { science::StatusCode::kInternal, "error waiting for data: " + std::string(strerror(errno)) };
   }
   if (ready == 0) {
     return { science::StatusCode::kUnavailable, "no data available" };
@@ -154,7 +192,7 @@ auto StreamOut::read(SynapseData* data, science::libndtp::NDTPHeader* header, si
 
   std::vector<uint8_t> buf;
   buf.resize(8192);
-  auto rc = recvfrom(sock(), buf.data(), buf.size(), 0, reinterpret_cast<sockaddr*>(&saddr), &saddr_len);
+  auto rc = recvfrom(socket_, buf.data(), buf.size(), 0, reinterpret_cast<struct sockaddr*>(&saddr), &saddr_len);
   if (rc < 0) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       return { science::StatusCode::kUnavailable, "no data available" };
@@ -167,15 +205,45 @@ auto StreamOut::read(SynapseData* data, science::libndtp::NDTPHeader* header, si
   return unpack(buf, data, header, bytes_read);
 }
 
+auto StreamOut::from_proto(const synapse::NodeConfig& proto, std::shared_ptr<Node>* node) -> science::Status {
+  if (!proto.has_stream_out()) {
+    return { science::StatusCode::kInvalidArgument, "missing stream_out config" };
+  }
+
+  const auto& config = proto.stream_out();
+  const auto& label = config.label();
+
+  if (!config.has_udp_unicast()) {
+    // Use defaults
+    *node = std::make_shared<StreamOut>("", DEFAULT_STREAM_OUT_PORT, label);
+    return {};
+  }
+
+  const auto& unicast = config.udp_unicast();
+  std::string dest_addr = unicast.destination_address();
+  uint16_t dest_port = unicast.destination_port();
+
+  if (dest_addr.empty()) {
+    dest_addr = get_client_ip();
+  }
+  if (dest_port == 0) {
+    dest_port = DEFAULT_STREAM_OUT_PORT;
+  }
+
+  *node = std::make_shared<StreamOut>(dest_addr, dest_port, label);
+  return {};
+}
+
 auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> science::Status {
   if (proto == nullptr) {
     return { science::StatusCode::kInvalidArgument, "proto ptr must not be null" };
   }
 
   synapse::StreamOutConfig* config = proto->mutable_stream_out();
-
+  synapse::UDPUnicastConfig* unicast = config->mutable_udp_unicast();
+  unicast->set_destination_address(destination_address_);
+  unicast->set_destination_port(destination_port_);
   config->set_label(label_);
-  config->set_multicast_group(multicast_group_);
 
   return {};
 }

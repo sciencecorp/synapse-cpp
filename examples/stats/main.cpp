@@ -56,7 +56,9 @@ auto configure_stream(Device& device, std::shared_ptr<StreamOut>* stream_out_ptr
   
   NodeConfig stream_out_config;
   auto* stream_out_proto = stream_out_config.mutable_stream_out();
-  stream_out_proto->set_multicast_group("224.0.0.115");
+  auto* udp_config = stream_out_proto->mutable_udp_unicast();
+  udp_config->set_destination_address("127.0.0.1");
+  udp_config->set_destination_port(StreamOut::DEFAULT_STREAM_OUT_PORT);
 
   std::shared_ptr<Node> stream_out_node;
   s = StreamOut::from_proto(stream_out_config, &stream_out_node);
