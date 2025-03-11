@@ -1,0 +1,107 @@
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: "The runner to use"
+        required: true
+        default: "ubuntu-22.04"
+        type: string
+      triplet:
+        description: "The triplet to use"
+        required: true
+        default: "x64-linux"
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  _VCPKG_: ${{ github.workspace }}/external/microsoft/vcpkg
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/external/microsoft/vcpkg/bincache
+  VCPKG_FEATURE_FLAGS: "dependencygraph"
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
+        run: mkdir -p ${{ github.workspace }}/external/microsoft/vcpkg/bincache
+        shell: bash
+
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "3.29.0"
+
+      - name: Restore vcpkg
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env._VCPKG_ }}
+            !${{ env._VCPKG_ }}/buildtrees
+            !${{ env._VCPKG_ }}/packages
+            !${{ env._VCPKG_ }}/downloads
+            !${{ env._VCPKG_ }}/installed
+          key: |
+            ${{ inputs.triplet }}-${{ hashFiles( '.git/modules/external/microsoft/vcpkg/HEAD' )}}
+
+      - name: Configure
+        env:
+          CMAKE_VERBOSE_MAKEFILE: 1
+          VCPKG_DEBUG: 1
+        run: |
+          echo "Configuring for triplet ${{ inputs.triplet }}"
+          TRIPLET=${{ inputs.triplet }} make configure
+
+      - name: Build
+        run: NPROC=1 make build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ inputs.triplet }}-${{ github.sha }}
+          path: build
+          retention-days: 1
+
+  test:
+    needs: [build]
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
+        run: mkdir -p ${{ github.workspace }}/external/microsoft/vcpkg/bincache
+        shell: bash
+
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "3.29.0"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-${{ inputs.triplet }}-${{ github.sha }}
+          path: build
+
+      - name: Run tests
+        run: make test
+        shell: bash

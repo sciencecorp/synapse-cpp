@@ -1,0 +1,28 @@
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          [
+            { runner: "ubuntu-22.04", triplet: "x64-linux" },
+          ]
+    uses: ./.github/workflows/build-test.yml
+    with:
+      runner: ${{ matrix.build.runner }}
+      triplet: ${{ matrix.build.triplet }}
+    secrets: inherit
