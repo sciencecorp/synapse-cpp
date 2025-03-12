@@ -66,6 +66,14 @@ jobs:
           echo "Configuring for triplet ${{ inputs.triplet }}"
           TRIPLET=${{ inputs.triplet }} make configure
 
+      - name: Upload vcpkg buildtrees
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-buildtrees-${{ inputs.triplet }}-${{ github.sha }}
+          path: external/microsoft/vcpkg/buildtrees/science-scipp
+          retention-days: 1
+
       - name: Build
         run: NPROC=1 make build
 
@@ -74,34 +82,6 @@ jobs:
           name: build-${{ inputs.triplet }}-${{ github.sha }}
           path: build
           retention-days: 1
-
-  test:
-    needs: [build]
-    runs-on: ${{ inputs.runner }}
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-        with:
-          submodules: "true"
-
-      - uses: actions/github-script@v6
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-      - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
-        run: mkdir -p ${{ github.workspace }}/external/microsoft/vcpkg/bincache
-        shell: bash
-
-      - uses: lukka/get-cmake@latest
-        with:
-          cmakeVersion: "3.29.0"
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-${{ inputs.triplet }}-${{ github.sha }}
-          path: build
 
       - name: Run tests
         run: make test
