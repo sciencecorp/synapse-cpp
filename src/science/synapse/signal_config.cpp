@@ -91,6 +91,7 @@ auto Signal::from_proto(const synapse::SignalConfig& proto, Signal* config) -> s
     config->signal = pixels;
   
   } else {
+    config->signal = {};
     return { science::StatusCode::kInvalidArgument, "signal type not specified" };
   }
 

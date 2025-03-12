@@ -217,7 +217,7 @@ auto stream(const std::string& uri, bool configure) -> int {
     }
   }
 
-  return 1;
+  return 0;
 }
 
 int main(int argc, char** argv) {

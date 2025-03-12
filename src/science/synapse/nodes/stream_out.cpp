@@ -18,10 +18,12 @@ using science::libndtp::ElectricalBroadbandData;
 using science::libndtp::NDTPMessage;
 using science::libndtp::SynapseData;
 
+const std::string LOCALHOST = "127.0.0.1";
+
 static auto get_client_ip() -> std::string {
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
-    return "";
+    return LOCALHOST;
   }
 
   struct sockaddr_in addr;
@@ -31,14 +33,14 @@ static auto get_client_ip() -> std::string {
 
   if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
     close(sock);
-    return "";
+    return LOCALHOST;
   }
 
   struct sockaddr_in local_addr;
   socklen_t len = sizeof(local_addr);
   if (getsockname(sock, (struct sockaddr*)&local_addr, &len) < 0) {
     close(sock);
-    return "";
+    return LOCALHOST;
   }
 
   close(sock);
@@ -151,12 +153,12 @@ auto StreamOut::init() -> science::Status {
     // continue
   }
 
-  addr_ = sockaddr("0.0.0.0", destination_port_);
+  addr_ = sockaddr(destination_address_, destination_port_);
   
   rc = bind(socket_, reinterpret_cast<struct sockaddr*>(&addr_.value()), sizeof(addr_.value()));
   if (rc < 0) {
     return { science::StatusCode::kInternal, 
-             "error binding socket to 0.0.0.0:" + std::to_string(destination_port_) +
+             "error binding socket to " + destination_address_ + ":" + std::to_string(destination_port_) +
              " (code: " + std::to_string(rc) + ", errno: " + std::to_string(errno) + ")" };
   }
 
@@ -177,7 +179,7 @@ auto StreamOut::read(SynapseData* data, science::libndtp::NDTPHeader* header, si
   fd_set readfds;
   struct timeval tv;
   tv.tv_sec = 0;
-  tv.tv_usec = 10000;  // Increased timeout to 100ms for debugging
+  tv.tv_usec = 1000;
 
   FD_ZERO(&readfds);
   FD_SET(socket_, &readfds);
@@ -241,7 +243,7 @@ auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> science::Status {
 
   synapse::StreamOutConfig* config = proto->mutable_stream_out();
   synapse::UDPUnicastConfig* unicast = config->mutable_udp_unicast();
-  unicast->set_destination_address(destination_address_);
+  unicast->set_destination_address(destination_address_.empty() ? LOCALHOST : destination_address_);
   unicast->set_destination_port(destination_port_);
   config->set_label(label_);
 
