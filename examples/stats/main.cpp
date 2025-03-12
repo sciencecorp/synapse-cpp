@@ -52,7 +52,7 @@ auto configure_stream(Device& device, std::shared_ptr<StreamOut>* stream_out_ptr
   }
 
   Config config;
-  auto broadband_source = std::make_shared<synapse::BroadbandSource>(1, 16, 30000, 20.0, signal);
+  auto broadband_source = std::make_shared<synapse::BroadbandSource>(100, 16, 30000, 20.0, signal);
   
   NodeConfig stream_out_config;
   auto* stream_out_proto = stream_out_config.mutable_stream_out();
