@@ -23,7 +23,7 @@ using synapse::NodeConfig;
 using synapse::Node;
 
 
-auto stream_new(Device& device, std::shared_ptr<StreamOut>* stream_out_ptr, const std::string& dest_addr) -> science::Status {
+auto stream_new(Device& device, std::shared_ptr<StreamOut>* stream_out_ptr) -> science::Status {
   const uint32_t N_CHANNELS = 10;
   if (stream_out_ptr == nullptr) {
     return { science::StatusCode::kInvalidArgument, "stream out pointer is null" };
@@ -58,7 +58,6 @@ auto stream_new(Device& device, std::shared_ptr<StreamOut>* stream_out_ptr, cons
   NodeConfig stream_out_config;
   auto* stream_out_proto = stream_out_config.mutable_stream_out();
   auto* udp_config = stream_out_proto->mutable_udp_unicast();
-  udp_config->set_destination_address(dest_addr);
   udp_config->set_destination_port(StreamOut::DEFAULT_STREAM_OUT_PORT);
   stream_out_proto->set_label("Broadband Stream");
 
@@ -143,7 +142,7 @@ auto stream(const std::string& uri, bool configure) -> int {
 
   std::shared_ptr<synapse::StreamOut> stream_out;
   if (configure) {
-    s = stream_new(device, &stream_out, "127.0.0.1");
+    s = stream_new(device, &stream_out);
     if (!s.ok()) {
       std::cout << "error configuring stream out node: ("
         << static_cast<int>(s.code()) << ") " << s.message() << std::endl;
