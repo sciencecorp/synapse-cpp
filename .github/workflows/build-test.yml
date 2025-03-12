@@ -18,6 +18,7 @@ permissions:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   _VCPKG_: ${{ github.workspace }}/external/microsoft/vcpkg
+  VCPKG_ROOT: ${{ github.workspace }}/external/microsoft/vcpkg
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
   VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/external/microsoft/vcpkg/bincache
   VCPKG_FEATURE_FLAGS: "dependencygraph"
