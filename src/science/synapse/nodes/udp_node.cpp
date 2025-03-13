@@ -10,7 +10,7 @@
 namespace synapse {
 
 
-auto sockaddr(const std::string& host, uint16_t port) -> sockaddr_in {
+static auto sockaddr(const std::string& host, uint16_t port) -> sockaddr_in {
   sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
