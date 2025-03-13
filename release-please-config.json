@@ -5,6 +5,5 @@
     }
   },
   "bootstrap-sha": "e255ba2a354554be7b59ad7711aef9695cd34a92",
-  "always-update": true,
-  "bump-minor-pre-major": true
+  "always-update": true
 }
