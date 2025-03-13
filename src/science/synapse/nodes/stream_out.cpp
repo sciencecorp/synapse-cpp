@@ -20,7 +20,9 @@ using science::libndtp::SynapseData;
 
 auto unpack(
   const std::vector<uint8_t>& bytes,
-  SynapseData* data
+  SynapseData* data,
+  science::libndtp::NDTPHeader* header,
+  size_t* bytes_read
 ) -> science::Status {
   NDTPMessage msg;
   try {
@@ -28,6 +30,13 @@ auto unpack(
   } catch (const std::exception& e) {
     std::cout << "Stream Out | error unpacking NDTP message: " << e.what() << std::endl;
     return { science::StatusCode::kInternal, "error unpacking NDTP message: " + std::string(e.what()) };
+  }
+
+  if (header != nullptr) {
+    *header = msg.header;
+  }
+  if (bytes_read != nullptr) {
+    *bytes_read = bytes.size();
   }
 
   switch (msg.header.data_type) {
@@ -116,7 +125,7 @@ auto StreamOut::init() -> science::Status {
   return {};
 }
 
-auto StreamOut::read(SynapseData* data) -> science::Status {
+auto StreamOut::read(SynapseData* data, science::libndtp::NDTPHeader* header, size_t* bytes_read) -> science::Status {
   if (!sock() || !addr()) {
     auto s = init();
     if (!s.ok()) {
@@ -155,7 +164,7 @@ auto StreamOut::read(SynapseData* data) -> science::Status {
   }
 
   buf.resize(rc);
-  return unpack(buf, data);
+  return unpack(buf, data, header, bytes_read);
 }
 
 auto StreamOut::p_to_proto(synapse::NodeConfig* proto) -> science::Status {

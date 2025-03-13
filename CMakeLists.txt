@@ -112,8 +112,20 @@ install(
 
 if ("examples" IN_LIST VCPKG_MANIFEST_FEATURES)
   add_executable(stream_out examples/stream_out/main.cpp)
+  file(GLOB_RECURSE TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/examples/stream_out/*.cpp")
+  target_sources(stream_out PRIVATE ${TEST_SOURCES})
+  target_include_directories(stream_out PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/examples)
   target_link_libraries(stream_out PRIVATE ${PROJECT_NAME} science::scipp)
   set_target_properties(stream_out PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
+  )
+
+  add_executable(stats examples/stats/main.cpp)
+  file(GLOB_RECURSE TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/examples/stats/*.cpp")
+  target_sources(stats PRIVATE ${TEST_SOURCES})
+  target_include_directories(stats PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+  target_link_libraries(stats PRIVATE ${PROJECT_NAME} science::scipp)
+  set_target_properties(stats PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
   )
 endif()

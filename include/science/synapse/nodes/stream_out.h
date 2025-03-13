@@ -16,7 +16,7 @@ class StreamOut : public UdpNode {
  public:
   StreamOut(const std::string& label, const std::string& multicast_group);
 
-  auto read(science::libndtp::SynapseData* out) -> science::Status;
+  auto read(science::libndtp::SynapseData* out, science::libndtp::NDTPHeader* header = nullptr, size_t* bytes_read = nullptr) -> science::Status;
 
   [[nodiscard]] static auto from_proto(
     const synapse::NodeConfig& proto,
