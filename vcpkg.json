@@ -3,7 +3,7 @@
   "name": "synapse",
   "version": "0.1.0",
   "supports": "arm64 | x64 | linux | osx",
-  "default-features": [],
+  "default-features": ["examples", "tests"],
   "dependencies": ["grpc", "protobuf", "science-libndtp", "science-scipp"],
   "vcpkg-configuration": {
     "overlay-ports": ["./external/sciencecorp/vcpkg/ports"]

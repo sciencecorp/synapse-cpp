@@ -8,14 +8,19 @@
 #include "science/libndtp/types.h"
 #include "science/scipp/status.h"
 #include "science/synapse/api/nodes/stream_out.pb.h"
-#include "science/synapse/nodes/udp_node.h"
+#include "science/synapse/node.h"
 
 namespace synapse {
 
-class StreamOut : public UdpNode {
+class StreamOut : public Node {
  public:
-  StreamOut(const std::string& label, const std::string& multicast_group);
+  static constexpr uint16_t DEFAULT_STREAM_OUT_PORT = 50038;
+  StreamOut(const std::string& destination_address = "",
+           uint16_t destination_port = DEFAULT_STREAM_OUT_PORT,
+           const std::string& label = "");
+  ~StreamOut();
 
+  auto init() -> science::Status;
   auto read(science::libndtp::SynapseData* out, science::libndtp::NDTPHeader* header = nullptr, size_t* bytes_read = nullptr) -> science::Status;
 
   [[nodiscard]] static auto from_proto(
@@ -27,11 +32,13 @@ class StreamOut : public UdpNode {
   auto p_to_proto(synapse::NodeConfig* proto) -> science::Status override;
 
  private:
-  const std::string label_;
-  const std::string multicast_group_;
+  std::string destination_address_;
+  uint16_t destination_port_;
+  std::string label_;
+  int socket_ = 0;
+  std::optional<sockaddr_in> addr_;
 
-  auto init() -> science::Status;
-  auto get_host(std::string* host) -> science::Status override;
+  static constexpr uint32_t SOCKET_BUFSIZE_BYTES = 5 * 1024 * 1024;  // 5MB
 };
 
 }  // namespace synapse
