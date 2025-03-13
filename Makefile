@@ -1,3 +1,5 @@
+VCPKG_MANIFEST_FEATURES ?= examples\;tests
+
 .PHONY: all
 all: clean configure build
 

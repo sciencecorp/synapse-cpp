@@ -14,7 +14,11 @@ To build:
 
 ```sh
 git submodule update --init
+
+# Set up vcpkg -- you can also use a vcpkg elsewhere via VCPKG_ROOT
 cd external/microsoft/vcpkg && ./bootstrap-vcpkg.sh && cd -
+export VCPKG_ROOT="$(pwd)/external/microsoft/vcpkg}"
+
 make all
 
 # or
