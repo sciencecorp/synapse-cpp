@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/sciencecorp/synapse-cpp/compare/v1.0.0...v1.0.1) (2025-05-06)
+
+
+### Bug Fixes
+
+* fix missing imports ([b3ca993](https://github.com/sciencecorp/synapse-cpp/commit/b3ca9935a212c81598569a995268f53c21ccb67b))
+
 ## [1.0.0](https://github.com/sciencecorp/synapse-cpp/compare/v0.2.0...v1.0.0) (2025-03-13)
 
 
