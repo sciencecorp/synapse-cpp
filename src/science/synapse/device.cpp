@@ -159,6 +159,78 @@ auto Device::uri() const -> const std::string& {
   return uri_;
 }
 
+auto Device::get_logs(
+    const std::string& log_level,
+    std::optional<int64_t> since_ms,
+    std::optional<int64_t> start_time_ns,
+    std::optional<int64_t> end_time_ns,
+    std::optional<std::chrono::milliseconds> timeout) -> std::vector<std::string> {
+
+  synapse::LogQueryRequest request;
+  request.set_min_level(log_level_to_pb(log_level));
+
+  if (since_ms.has_value()) {
+    request.set_since_ms(since_ms.value());
+  } else {
+    if (start_time_ns.has_value()) {
+      request.set_start_time_ns(start_time_ns.value());
+    }
+    if (end_time_ns.has_value()) {
+      request.set_end_time_ns(end_time_ns.value());
+    }
+  }
+
+  grpc::ClientContext context;
+  if (timeout.has_value()) {
+    context.set_deadline(std::chrono::system_clock::now() + timeout.value());
+  }
+
+  synapse::LogQueryResponse response;
+  std::vector<std::string> logs;
+
+  grpc::Status status = rpc_->GetLogs(&context, request, &response);
+
+  if (status.ok()) {
+    for (const auto& entry : response.entries()) {
+      logs.push_back(entry.message());
+    }
+  } else {
+    std::cerr << "Error getting logs: " << status.error_message() << std::endl;
+  }
+
+  return logs;
+}
+
+auto Device::tail_logs(
+    const std::string& log_level,
+    std::optional<std::chrono::milliseconds> timeout) -> std::vector<std::string> {
+
+  synapse::TailLogsRequest request;
+  request.set_min_level(log_level_to_pb(log_level));
+
+  grpc::ClientContext context;
+  if (timeout.has_value()) {
+    context.set_deadline(std::chrono::system_clock::now() + timeout.value());
+  }
+
+  std::vector<std::string> logs;
+
+  std::unique_ptr<grpc::ClientReader<synapse::LogEntry>> reader(
+      rpc_->TailLogs(&context, request));
+
+  synapse::LogEntry entry;
+  while (reader->Read(&entry)) {
+    logs.push_back(entry.message());
+  }
+
+  grpc::Status status = reader->Finish();
+  if (!status.ok()) {
+    std::cerr << "Error tailing logs: " << status.error_message() << std::endl;
+  }
+
+  return logs;
+}
+
 auto Device::handle_status_response(const synapse::Status& status) -> science::Status {
   if (status.code() != synapse::StatusCode::kOk) {
     return {
@@ -175,6 +247,15 @@ auto Device::handle_status_response(const synapse::Status& status) -> science::S
   }
 
   return {};
+}
+
+auto Device::log_level_to_pb(const std::string& level) -> synapse::LogLevel {
+  if (level == "DEBUG") return synapse::LogLevel::LOG_LEVEL_DEBUG;
+  if (level == "INFO") return synapse::LogLevel::LOG_LEVEL_INFO;
+  if (level == "WARNING") return synapse::LogLevel::LOG_LEVEL_WARNING;
+  if (level == "ERROR") return synapse::LogLevel::LOG_LEVEL_ERROR;
+  if (level == "CRITICAL") return synapse::LogLevel::LOG_LEVEL_CRITICAL;
+  return synapse::LogLevel::LOG_LEVEL_UNKNOWN;
 }
 
 }  // namespace synapse
