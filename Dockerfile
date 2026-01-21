@@ -38,9 +38,9 @@ WORKDIR /src
 # Copy source files (excluding git dirs and build artifacts via .dockerignore)
 COPY . .
 
-# Clone submodules (TODO: replace with tagged releases)
+# Clone submodules at pinned versions
 RUN rm -rf external/sciencecorp/synapse-api && \
-    git clone --branch main https://github.com/sciencecorp/synapse-api.git external/sciencecorp/synapse-api
+    git clone --branch v2.1.0 https://github.com/sciencecorp/synapse-api.git external/sciencecorp/synapse-api
 
 RUN if [ ! -d "external/sciencecorp/vcpkg/ports" ]; then \
         rm -rf external/sciencecorp/vcpkg && \
