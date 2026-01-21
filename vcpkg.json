@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "supports": "arm64 | x64 | linux | osx",
   "default-features": ["examples", "tests"],
-  "dependencies": ["grpc", "protobuf", "cppzmq", "science-scipp"],
+  "dependencies": ["grpc", "protobuf", "cppzmq"],
   "vcpkg-configuration": {
     "overlay-ports": ["./external/sciencecorp/vcpkg/ports"]
   },

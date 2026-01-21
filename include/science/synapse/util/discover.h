@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "science/scipp/status.h"
+#include "science/synapse/status.h"
 #include "science/synapse/device_advertisement.h"
 
 namespace synapse {

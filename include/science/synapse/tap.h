@@ -6,7 +6,7 @@
 #include <optional>
 
 #include <zmq.hpp>
-#include "science/scipp/status.h"
+#include "science/synapse/status.h"
 #include "science/synapse/api/tap.pb.h"
 
 namespace synapse {

@@ -1,6 +1,6 @@
 
 #include <gtest/gtest.h>
-#include <science/scipp/status.h>
+#include <science/synapse/status.h>
 #include <science/synapse/util/discover.h>
 
 using synapse::DeviceAdvertisement;

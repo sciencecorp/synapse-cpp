@@ -5,7 +5,7 @@
 #include <vector>
 #include <utility>
 
-#include "science/scipp/status.h"
+#include "science/synapse/status.h"
 #include "science/synapse/api/synapse.pb.h"
 #include "science/synapse/node.h"
 

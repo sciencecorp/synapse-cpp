@@ -4,7 +4,7 @@
 #include <vector>
 #include "science/synapse/api/nodes/signal_config.pb.h"
 #include "science/synapse/channel.h"
-#include "science/scipp/status.h"
+#include "science/synapse/status.h"
 
 namespace synapse {
 
