@@ -6,7 +6,11 @@
 #include <vector>
 
 #include <grpcpp/grpcpp.h>
+#include "science/synapse/api/app.pb.h"
+#include "science/synapse/api/device.pb.h"
+#include "science/synapse/api/logging.pb.h"
 #include "science/synapse/api/node.pb.h"
+#include "science/synapse/api/query.pb.h"
 #include "science/synapse/api/synapse.pb.h"
 #include "science/synapse/api/synapse.grpc.pb.h"
 #include "science/synapse/config.h"
@@ -21,7 +25,6 @@ class IDevice {
   virtual auto info(synapse::DeviceInfo* info, std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status = 0;
   virtual auto start(std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status = 0;
   virtual auto stop(std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status = 0;
-  virtual auto sockets() const -> const std::vector<synapse::NodeSocket>& = 0;
   virtual auto uri() const -> const std::string& = 0;
 };
 
@@ -53,16 +56,55 @@ class Device : public IDevice {
   [[nodiscard]] auto stop(std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status;
 
   /**
-   * List the node sockets configured on the device. 
-   * 
-   * @return std::vector<synapse::NodeSocket> 
+   * Execute a query on the device.
+   *
+   * @param request The query request.
+   * @param response Output parameter for the query response.
+   * @param timeout Optional timeout for the query.
+   * @return Status indicating success or failure.
    */
-  [[nodiscard]] auto sockets() const -> const std::vector<synapse::NodeSocket>&;
+  [[nodiscard]] auto query(const synapse::QueryRequest& request,
+                           synapse::QueryResponse* response,
+                           std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status;
 
   /**
-   * List the node sockets configured on the device. 
-   * 
-   * @return std::vector<synapse::NodeSocket> 
+   * Get device logs.
+   *
+   * @param request Log query parameters (time range, level filter).
+   * @param response Output parameter for log entries.
+   * @param timeout Optional timeout.
+   * @return Status indicating success or failure.
+   */
+  [[nodiscard]] auto get_logs(const synapse::LogQueryRequest& request,
+                               synapse::LogQueryResponse* response,
+                               std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status;
+
+  /**
+   * Update device settings.
+   *
+   * @param request Settings to update.
+   * @param response Output parameter for updated settings.
+   * @param timeout Optional timeout.
+   * @return Status indicating success or failure.
+   */
+  [[nodiscard]] auto update_settings(const synapse::UpdateDeviceSettingsRequest& request,
+                                      synapse::UpdateDeviceSettingsResponse* response,
+                                      std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status;
+
+  /**
+   * List installed applications on the device.
+   *
+   * @param response Output parameter for list of apps.
+   * @param timeout Optional timeout.
+   * @return Status indicating success or failure.
+   */
+  [[nodiscard]] auto list_apps(synapse::ListAppsResponse* response,
+                                std::optional<std::chrono::milliseconds> timeout = std::nullopt) -> science::Status;
+
+  /**
+   * Get the device URI.
+   *
+   * @return The device URI string.
    */
   [[nodiscard]] auto uri() const -> const std::string&;
 
@@ -70,8 +112,6 @@ class Device : public IDevice {
   std::string uri_;
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<synapse::SynapseDevice::Stub> rpc_;
-
-  std::vector<synapse::NodeSocket> sockets_;
 
   [[nodiscard]] auto handle_status_response(const synapse::Status& status) -> science::Status;
 };

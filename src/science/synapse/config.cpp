@@ -1,12 +1,12 @@
 #include "science/synapse/config.h"
 #include "science/synapse/nodes/broadband_source.h"
+#include "science/synapse/nodes/disk_writer.h"
 #include "science/synapse/nodes/electrical_stimulation.h"
 #include "science/synapse/nodes/optical_stimulation.h"
-#include "science/synapse/nodes/spike_detect.h"
-#include "science/synapse/nodes/spike_source.h"
 #include "science/synapse/nodes/spectral_filter.h"
-#include "science/synapse/nodes/stream_in.h"
-#include "science/synapse/nodes/stream_out.h"
+#include "science/synapse/nodes/spike_binner.h"
+#include "science/synapse/nodes/spike_detector.h"
+#include "science/synapse/nodes/spike_source.h"
 
 
 namespace synapse {
@@ -24,26 +24,26 @@ auto create_node(const synapse::NodeConfig& config, std::shared_ptr<Node>* node_
     case synapse::NodeType::kBroadbandSource:
       return BroadbandSource::from_proto(config, node_ptr);
 
+    case synapse::NodeType::kDiskWriter:
+      return DiskWriter::from_proto(config, node_ptr);
+
     case synapse::NodeType::kElectricalStimulation:
       return ElectricalStimulation::from_proto(config, node_ptr);
 
     case synapse::NodeType::kOpticalStimulation:
       return OpticalStimulation::from_proto(config, node_ptr);
 
-    case synapse::NodeType::kSpikeDetect:
-      return SpikeDetect::from_proto(config, node_ptr);
-
-    case synapse::NodeType::kSpikeSource:
-      return SpikeSource::from_proto(config, node_ptr);
-
     case synapse::NodeType::kSpectralFilter:
       return SpectralFilter::from_proto(config, node_ptr);
 
-    case synapse::NodeType::kStreamIn:
-      return StreamIn::from_proto(config, node_ptr);
+    case synapse::NodeType::kSpikeBinner:
+      return SpikeBinner::from_proto(config, node_ptr);
 
-    case synapse::NodeType::kStreamOut:
-      return StreamOut::from_proto(config, node_ptr);
+    case synapse::NodeType::kSpikeDetector:
+      return SpikeDetector::from_proto(config, node_ptr);
+
+    case synapse::NodeType::kSpikeSource:
+      return SpikeSource::from_proto(config, node_ptr);
 
     default:
       return { science::StatusCode::kInvalidArgument, "unknown node type \"" + std::to_string(config.type()) + "\"" };
