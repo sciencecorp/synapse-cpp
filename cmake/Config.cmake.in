@@ -3,7 +3,6 @@
 find_package(gRPC REQUIRED CONFIG)
 find_package(Protobuf REQUIRED CONFIG)
 find_package(cppzmq REQUIRED CONFIG)
-find_package(science-scipp REQUIRED CONFIG)
 
 include("${CMAKE_CURRENT_LIST_DIR}/synapseTargets.cmake")
 
