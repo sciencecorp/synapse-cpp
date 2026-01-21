@@ -3,6 +3,6 @@
 
 namespace synapse {
 
-const std::string SYNAPSE_VERSION = "@CMAKE_PROJECT_VERSION@";
+const std::string SYNAPSE_VERSION = "@SYNAPSE_CPP_VERSION_FULL@";
 
 }

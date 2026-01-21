@@ -151,8 +151,168 @@ auto Device::stop(std::optional<std::chrono::milliseconds> timeout) -> science::
   return status;
 }
 
-auto Device::sockets() const -> const std::vector<synapse::NodeSocket>& {
-  return sockets_;
+auto Device::query(const synapse::QueryRequest& request,
+                   synapse::QueryResponse* response,
+                   std::optional<std::chrono::milliseconds> timeout) -> science::Status {
+  if (response == nullptr) {
+    return {science::StatusCode::kInvalidArgument, "response must not be null"};
+  }
+
+  grpc::ClientContext context;
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
+  }
+
+  synapse::QueryResponse res;
+  science::Status status;
+  bool done = false;
+  std::mutex m;
+  std::condition_variable cv;
+
+  rpc_->async()->Query(
+    &context, &request, &res,
+    [&res, &status, &done, &m, &cv, response](grpc::Status gstatus) {
+      science::Status s;
+      if (!gstatus.ok()) {
+        s = {static_cast<science::StatusCode>(gstatus.error_code()), gstatus.error_message()};
+      } else {
+        if (res.status().code() != synapse::StatusCode::kOk) {
+          s = {science::StatusCode::kInternal,
+               "(code: " + std::to_string(res.status().code()) + "): " + res.status().message()};
+        }
+        response->CopyFrom(res);
+      }
+
+      std::lock_guard<std::mutex> lock(m);
+      done = true;
+      status = s;
+      cv.notify_one();
+    });
+
+  std::unique_lock<std::mutex> lock(m);
+  cv.wait(lock, [&done] { return done; });
+  return status;
+}
+
+auto Device::get_logs(const synapse::LogQueryRequest& request,
+                       synapse::LogQueryResponse* response,
+                       std::optional<std::chrono::milliseconds> timeout) -> science::Status {
+  if (response == nullptr) {
+    return {science::StatusCode::kInvalidArgument, "response must not be null"};
+  }
+
+  grpc::ClientContext context;
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
+  }
+
+  synapse::LogQueryResponse res;
+  science::Status status;
+  bool done = false;
+  std::mutex m;
+  std::condition_variable cv;
+
+  rpc_->async()->GetLogs(
+    &context, &request, &res,
+    [&res, &status, &done, &m, &cv, response](grpc::Status gstatus) {
+      science::Status s;
+      if (!gstatus.ok()) {
+        s = {static_cast<science::StatusCode>(gstatus.error_code()), gstatus.error_message()};
+      } else {
+        response->CopyFrom(res);
+      }
+
+      std::lock_guard<std::mutex> lock(m);
+      done = true;
+      status = s;
+      cv.notify_one();
+    });
+
+  std::unique_lock<std::mutex> lock(m);
+  cv.wait(lock, [&done] { return done; });
+  return status;
+}
+
+auto Device::update_settings(const synapse::UpdateDeviceSettingsRequest& request,
+                              synapse::UpdateDeviceSettingsResponse* response,
+                              std::optional<std::chrono::milliseconds> timeout) -> science::Status {
+  if (response == nullptr) {
+    return {science::StatusCode::kInvalidArgument, "response must not be null"};
+  }
+
+  grpc::ClientContext context;
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
+  }
+
+  synapse::UpdateDeviceSettingsResponse res;
+  science::Status status;
+  bool done = false;
+  std::mutex m;
+  std::condition_variable cv;
+
+  rpc_->async()->UpdateDeviceSettings(
+    &context, &request, &res,
+    [&res, &status, &done, &m, &cv, response](grpc::Status gstatus) {
+      science::Status s;
+      if (!gstatus.ok()) {
+        s = {static_cast<science::StatusCode>(gstatus.error_code()), gstatus.error_message()};
+      } else {
+        if (res.status().code() != synapse::StatusCode::kOk) {
+          s = {science::StatusCode::kInternal,
+               "(code: " + std::to_string(res.status().code()) + "): " + res.status().message()};
+        }
+        response->CopyFrom(res);
+      }
+
+      std::lock_guard<std::mutex> lock(m);
+      done = true;
+      status = s;
+      cv.notify_one();
+    });
+
+  std::unique_lock<std::mutex> lock(m);
+  cv.wait(lock, [&done] { return done; });
+  return status;
+}
+
+auto Device::list_apps(synapse::ListAppsResponse* response,
+                        std::optional<std::chrono::milliseconds> timeout) -> science::Status {
+  if (response == nullptr) {
+    return {science::StatusCode::kInvalidArgument, "response must not be null"};
+  }
+
+  grpc::ClientContext context;
+  if (timeout) {
+    context.set_deadline(std::chrono::system_clock::now() + *timeout);
+  }
+
+  synapse::ListAppsRequest req;
+  synapse::ListAppsResponse res;
+  science::Status status;
+  bool done = false;
+  std::mutex m;
+  std::condition_variable cv;
+
+  rpc_->async()->ListApps(
+    &context, &req, &res,
+    [&res, &status, &done, &m, &cv, response](grpc::Status gstatus) {
+      science::Status s;
+      if (!gstatus.ok()) {
+        s = {static_cast<science::StatusCode>(gstatus.error_code()), gstatus.error_message()};
+      } else {
+        response->CopyFrom(res);
+      }
+
+      std::lock_guard<std::mutex> lock(m);
+      done = true;
+      status = s;
+      cv.notify_one();
+    });
+
+  std::unique_lock<std::mutex> lock(m);
+  cv.wait(lock, [&done] { return done; });
+  return status;
 }
 
 auto Device::uri() const -> const std::string& {
@@ -165,13 +325,6 @@ auto Device::handle_status_response(const synapse::Status& status) -> science::S
       science::StatusCode::kInternal,
       "(code: " + std::to_string(status.code()) + "): " + status.message()
     };
-  }
-
-  sockets_.clear();
-  for (const auto& socket : status.sockets()) {
-    synapse::NodeSocket s;
-    s.CopyFrom(socket);
-    sockets_.push_back(s);
   }
 
   return {};

@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.23.5)
 
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version.txt" SYNAPSE_CPP_VERSION)
-string(STRIP "${SYNAPSE_CPP_VERSION}" SYNAPSE_CPP_VERSION)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version.txt" SYNAPSE_CPP_VERSION_FULL)
+string(STRIP "${SYNAPSE_CPP_VERSION_FULL}" SYNAPSE_CPP_VERSION_FULL)
+# Extract semver (before any -suffix) for CMake VERSION
+string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1" SYNAPSE_CPP_VERSION "${SYNAPSE_CPP_VERSION_FULL}")
 project(synapse VERSION ${SYNAPSE_CPP_VERSION})
 
 set(CMAKE_CXX_STANDARD 17)
@@ -10,7 +12,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
-find_package(science-libndtp REQUIRED CONFIG)
+find_package(cppzmq CONFIG REQUIRED)
 find_package(science-scipp REQUIRED CONFIG)
 
 add_library(${PROJECT_NAME})
@@ -70,7 +72,7 @@ target_link_libraries(
   PRIVATE
   gRPC::grpc++
   protobuf::libprotobuf
-  science::libndtp
+  cppzmq
   science::scipp
 )
 
@@ -111,21 +113,11 @@ install(
 )
 
 if ("examples" IN_LIST VCPKG_MANIFEST_FEATURES)
-  add_executable(stream_out examples/stream_out/main.cpp)
-  file(GLOB_RECURSE TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/examples/stream_out/*.cpp")
-  target_sources(stream_out PRIVATE ${TEST_SOURCES})
-  target_include_directories(stream_out PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/examples)
-  target_link_libraries(stream_out PRIVATE ${PROJECT_NAME} science::scipp)
-  set_target_properties(stream_out PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
-  )
-
-  add_executable(stats examples/stats/main.cpp)
-  file(GLOB_RECURSE TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/examples/stats/*.cpp")
-  target_sources(stats PRIVATE ${TEST_SOURCES})
-  target_include_directories(stats PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/examples)
-  target_link_libraries(stats PRIVATE ${PROJECT_NAME} science::scipp)
-  set_target_properties(stats PROPERTIES
+  # Tap example
+  add_executable(tap_example examples/tap/main.cpp)
+  target_include_directories(tap_example PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+  target_link_libraries(tap_example PRIVATE ${PROJECT_NAME} science::scipp)
+  set_target_properties(tap_example PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
   )
 endif()

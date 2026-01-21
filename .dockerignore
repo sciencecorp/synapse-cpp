@@ -1,0 +1,8 @@
+build/
+dist/
+.git/
+external/microsoft/vcpkg/
+*.o
+*.a
+*.so
+*.dylib
