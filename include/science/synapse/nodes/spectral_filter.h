@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include "science/synapse/api/nodes/spectral_filter.pb.h"
 #include "science/synapse/node.h"

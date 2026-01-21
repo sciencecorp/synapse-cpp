@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include "science/synapse/api/nodes/spike_binner.pb.h"
 #include "science/synapse/node.h"

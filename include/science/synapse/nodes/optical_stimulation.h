@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include "science/synapse/api/nodes/optical_stimulation.pb.h"
 #include "science/synapse/channel_mask.h"
 #include "science/synapse/node.h"

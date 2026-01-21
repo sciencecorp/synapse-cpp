@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include "science/synapse/api/channel.pb.h"
 
 namespace synapse {

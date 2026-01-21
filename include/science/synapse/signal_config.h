@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <variant>
 #include <vector>
 #include "science/synapse/api/nodes/signal_config.pb.h"
