@@ -13,7 +13,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
 find_package(cppzmq CONFIG REQUIRED)
-find_package(science-scipp REQUIRED CONFIG)
 
 add_library(${PROJECT_NAME})
 
@@ -73,7 +72,6 @@ target_link_libraries(
   gRPC::grpc++
   protobuf::libprotobuf
   cppzmq
-  science::scipp
 )
 
 include(GNUInstallDirs)
@@ -116,7 +114,7 @@ if ("examples" IN_LIST VCPKG_MANIFEST_FEATURES)
   # Tap example
   add_executable(tap_example examples/tap/main.cpp)
   target_include_directories(tap_example PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/examples)
-  target_link_libraries(tap_example PRIVATE ${PROJECT_NAME} science::scipp)
+  target_link_libraries(tap_example PRIVATE ${PROJECT_NAME})
   set_target_properties(tap_example PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
   )
