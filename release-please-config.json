@@ -1,9 +1,0 @@
-{
-  "packages": {
-    ".": {
-      "release-type": "simple"
-    }
-  },
-  "bootstrap-sha": "e255ba2a354554be7b59ad7711aef9695cd34a92",
-  "always-update": true
-}
